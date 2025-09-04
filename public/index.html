@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WordPress Site Analyzer</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fab fa-wordpress"></i>
+                    <span>WordPress Analyzer</span>
+                </div>
+                <div class="header-subtitle">Professional WordPress Site Analysis</div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="app-main">
+            <!-- Analysis Form -->
+            <section class="analysis-section" id="analysisSection">
+                <div class="section-container">
+                    <div class="form-container">
+                        <h1>Analyze WordPress Site</h1>
+                        <p class="form-description">Enter a website URL to perform comprehensive WordPress analysis including version detection, theme identification, plugin discovery, and performance insights.</p>
+                        
+                        <form id="analysisForm" class="analysis-form">
+                            <div class="input-group">
+                                <div class="input-wrapper">
+                                    <input 
+                                        type="url" 
+                                        id="websiteUrl" 
+                                        name="url" 
+                                        placeholder="https://example.com" 
+                                        required
+                                        autocomplete="url"
+                                    >
+                                    <div class="input-icon">
+                                        <i class="fas fa-globe"></i>
+                                    </div>
+                                </div>
+                                <button type="submit" id="analyzeBtn" class="analyze-btn">
+                                    <span class="btn-text">Analyze Site</span>
+                                    <span class="btn-icon">
+                                        <i class="fas fa-search"></i>
+                                    </span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Loading Section -->
+            <section class="loading-section hidden" id="loadingSection">
+                <div class="section-container">
+                    <div class="loading-container">
+                        <div class="loading-spinner">
+                            <div class="spinner"></div>
+                        </div>
+                        <h2>Analyzing Website</h2>
+                        <p>Please wait while we perform comprehensive analysis...</p>
+                        
+                        <div class="progress-tracker">
+                            <div class="progress-step active" id="step1">
+                                <div class="step-icon">
+                                    <i class="fas fa-download"></i>
+                                </div>
+                                <div class="step-content">
+                                    <div class="step-title">Fetching Content</div>
+                                    <div class="step-description">Downloading page content</div>
+                                </div>
+                            </div>
+                            
+                            <div class="progress-step" id="step2">
+                                <div class="step-icon">
+                                    <i class="fab fa-wordpress"></i>
+                                </div>
+                                <div class="step-content">
+                                    <div class="step-title">Detecting WordPress</div>
+                                    <div class="step-description">Analyzing WordPress indicators</div>
+                                </div>
+                            </div>
+                            
+                            <div class="progress-step" id="step3">
+                                <div class="step-icon">
+                                    <i class="fas fa-cogs"></i>
+                                </div>
+                                <div class="step-content">
+                                    <div class="step-title">Analyzing Components</div>
+                                    <div class="step-description">Detecting plugins and themes</div>
+                                </div>
+                            </div>
+                            
+                            <div class="progress-step" id="step4">
+                                <div class="step-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="step-content">
+                                    <div class="step-title">Generating Report</div>
+                                    <div class="step-description">Compiling analysis results</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results-section hidden" id="resultsSection">
+                <div class="section-container">
+                    <div class="results-container">
+                        <div class="results-header">
+                            <div class="header-info">
+                                <h1>Analysis Complete</h1>
+                                <p id="analysisUrl" class="analysis-url"></p>
+                            </div>
+                            <div class="header-actions">
+                                <button id="downloadJson" class="action-btn secondary">
+                                    <i class="fas fa-download"></i>
+                                    <span>JSON</span>
+                                </button>
+                                <button id="downloadHtml" class="action-btn secondary">
+                                    <i class="fas fa-file-code"></i>
+                                    <span>HTML</span>
+                                </button>
+                                <button id="newAnalysis" class="action-btn primary">
+                                    <i class="fas fa-plus"></i>
+                                    <span>New Analysis</span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="resultsContent" class="results-content">
+                            <!-- Detailed results will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Error Section -->
+            <section class="error-section hidden" id="errorSection">
+                <div class="section-container">
+                    <div class="error-container">
+                        <div class="error-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <h2>Analysis Failed</h2>
+                        <p id="errorMessage" class="error-message"></p>
+                        <button id="retryBtn" class="retry-btn">
+                            <i class="fas fa-redo"></i>
+                            <span>Try Again</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                <p>&copy; 2024 WordPress Site Analyzer. Professional security analysis tool.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
