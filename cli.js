@@ -22,6 +22,7 @@ Examples:
 Options:
   --html          Generate HTML report (saved to reports/ directory)
   --json          Generate JSON report (saved to reports/ directory)
+  --performance   Include plugin performance analysis
   --output <file> Save report to file (auto-detects format from extension)
 
 Features:
@@ -29,6 +30,7 @@ Features:
 - Identifies active theme and version
 - Lists installed plugins with versions
 - Checks if plugins are outdated
+- Analyzes plugin performance impact
 - Generates comprehensive reports (console, JSON, HTML)
 - Organizes all reports in dedicated reports/ folder
         `);
@@ -39,13 +41,16 @@ Features:
     const url = args[0];
     const isHtml = args.includes('--html');
     const isJson = args.includes('--json');
+    const includePerformance = args.includes('--performance');
     const outputIndex = args.indexOf('--output');
     const outputFile = outputIndex !== -1 && args[outputIndex + 1] ? args[outputIndex + 1] : null;
     
     console.log('Starting WordPress analysis...\n');
 
     try {
-        const analyzer = new WordPressAnalyzer();
+        const analyzer = new WordPressAnalyzer({
+            includePerformance: includePerformance
+        });
         const results = await analyzer.analyzeSite(url);
         
         const fs = require('fs');

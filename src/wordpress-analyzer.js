@@ -11,6 +11,7 @@ const EnhancedWordPressDetector = require('./detectors/enhanced-wordpress-detect
 const EnhancedVersionDetector = require('./detectors/enhanced-version-detector');
 const ThemeDetector = require('./detectors/theme-detector');
 const PluginDetector = require('./detectors/plugin-detector');
+const PerformanceAnalyzer = require('./detectors/performance-analyzer');
 
 // Import reporters
 const ConsoleReporter = require('./reporters/console-reporter');
@@ -47,6 +48,7 @@ class WordPressAnalyzer {
             includeTheme: options.includeTheme !== false,
             includeVersion: options.includeVersion !== false,
             checkVersions: options.checkVersions !== false,
+            includePerformance: options.includePerformance !== false,
             maxConcurrentRequests: options.maxConcurrentRequests || 5,
             ...options
         };
@@ -74,6 +76,7 @@ class WordPressAnalyzer {
                 version: null,
                 theme: null,
                 plugins: [],
+                performance: null,
                 duration: null
             };
 
@@ -125,6 +128,12 @@ class WordPressAnalyzer {
 
             // Wait for all detection tasks to complete
             await Promise.all(detectionTasks);
+
+            // Step 3: Performance analysis (if enabled)
+            if (this.options.includePerformance && results.wordpress.isWordPress) {
+                await this.analyzePerformanceWithProgress(normalizedUrl, mainPageResponse.data)
+                    .then(performance => { results.performance = performance; });
+            }
 
             results.duration = Date.now() - startTime;
             console.log(`✅ Analysis completed in ${results.duration}ms`);
@@ -197,6 +206,28 @@ class WordPressAnalyzer {
         }
         
         return plugins;
+    }
+
+    /**
+     * Analyze performance with progress logging
+     * @param {string} baseUrl - Base URL
+     * @param {string} html - HTML content
+     * @returns {Object} Performance analysis results
+     */
+    async analyzePerformanceWithProgress(baseUrl, html) {
+        console.log('⚡ Analyzing plugin performance impact...');
+        const performanceAnalyzer = new PerformanceAnalyzer(baseUrl);
+        const performance = await performanceAnalyzer.analyze();
+        
+        if (performance) {
+            const pluginCount = Object.keys(performance.plugin_performance).length;
+            const recommendations = performance.recommendations.length;
+            console.log(`✅ Performance analysis complete: ${pluginCount} plugins analyzed, ${recommendations} recommendations`);
+        } else {
+            console.log('❌ Performance analysis failed');
+        }
+        
+        return performance;
     }
 
     /**

@@ -15,8 +15,8 @@ module.exports = WordPressAnalyzer;
 // Export individual components for advanced usage
 module.exports.WordPressAnalyzer = WordPressAnalyzer;
 module.exports.detectors = {
-    WordPressDetector: require('./src/detectors/wordpress-detector'),
-    VersionDetector: require('./src/detectors/version-detector'),
+    WordPressDetector: require('./src/detectors/enhanced-wordpress-detector'),
+    VersionDetector: require('./src/detectors/enhanced-version-detector'),
     ThemeDetector: require('./src/detectors/theme-detector'),
     PluginDetector: require('./src/detectors/plugin-detector')
 };
