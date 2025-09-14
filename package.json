@@ -12,7 +12,10 @@
     "analyze-html": "node cli.js --html",
     "quick-test": "node -e \"const WPA = require('./index'); new WPA().quickDetect('wordpress.org').then(r => console.log(r))\"",
     "web": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "server": "node start-server.js",
+    "test-fix": "node test-performance-fix.js",
+    "test-recommendations": "node test-fixes.js"
   },
   "keywords": [
     "wordpress",

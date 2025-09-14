@@ -13,6 +13,9 @@ const ThemeDetector = require('./detectors/theme-detector');
 const PluginDetector = require('./detectors/plugin-detector');
 const PerformanceAnalyzer = require('./detectors/performance-analyzer');
 
+// Import recommendation system
+const PluginRecommendationEngine = require('./recommendations/plugin-recommendation-engine');
+
 // Import reporters
 const ConsoleReporter = require('./reporters/console-reporter');
 const JsonReporter = require('./reporters/json-reporter');
@@ -41,6 +44,9 @@ class WordPressAnalyzer {
         this.versionDetector = new EnhancedVersionDetector(this.httpClient);
         this.themeDetector = new ThemeDetector(this.httpClient);
         this.pluginDetector = new PluginDetector(this.httpClient);
+        
+        // Initialize recommendation engine
+        this.recommendationEngine = new PluginRecommendationEngine(this.httpClient);
 
         // Options
         this.options = {
@@ -49,6 +55,7 @@ class WordPressAnalyzer {
             includeVersion: options.includeVersion !== false,
             checkVersions: options.checkVersions !== false,
             includePerformance: options.includePerformance !== false,
+            includeRecommendations: options.includeRecommendations !== false,
             maxConcurrentRequests: options.maxConcurrentRequests || 5,
             ...options
         };
@@ -77,6 +84,7 @@ class WordPressAnalyzer {
                 theme: null,
                 plugins: [],
                 performance: null,
+                recommendations: null,
                 duration: null
             };
 
@@ -133,6 +141,12 @@ class WordPressAnalyzer {
             if (this.options.includePerformance && results.wordpress.isWordPress) {
                 await this.analyzePerformanceWithProgress(normalizedUrl, mainPageResponse.data)
                     .then(performance => { results.performance = performance; });
+            }
+
+            // Step 4: Plugin recommendations (if enabled)
+            if (this.options.includeRecommendations && results.wordpress.isWordPress) {
+                await this.generateRecommendationsWithProgress(normalizedUrl, $, mainPageResponse.data, results)
+                    .then(recommendations => { results.recommendations = recommendations; });
             }
 
             results.duration = Date.now() - startTime;
@@ -228,6 +242,40 @@ class WordPressAnalyzer {
         }
         
         return performance;
+    }
+
+    /**
+     * Generate plugin recommendations with progress logging
+     * @param {string} baseUrl - Base URL
+     * @param {Object} $ - Cheerio instance
+     * @param {string} html - HTML content
+     * @param {Object} siteData - Current site analysis data
+     * @returns {Object} Plugin recommendations
+     */
+    async generateRecommendationsWithProgress(baseUrl, $, html, siteData) {
+        console.log('🎯 Generating plugin recommendations...');
+        
+        try {
+            const recommendations = await this.recommendationEngine.generateRecommendations(
+                baseUrl, 
+                $, 
+                html, 
+                siteData, 
+                siteData.performance
+            );
+            
+            if (recommendations && recommendations.summary) {
+                console.log(`✅ Generated ${recommendations.summary.total_recommendations} recommendations`);
+                console.log(`📊 Priority breakdown: ${recommendations.summary.priority_breakdown.high} high, ${recommendations.summary.priority_breakdown.medium} medium, ${recommendations.summary.priority_breakdown.low} low`);
+            } else {
+                console.log('❌ Recommendation generation failed');
+            }
+            
+            return recommendations;
+        } catch (error) {
+            console.error('❌ Recommendation generation failed:', error.message);
+            return null;
+        }
     }
 
     /**

@@ -6,6 +6,7 @@ const UrlHelper = require('../utils/url-helper');
 const VersionComparator = require('../utils/version-comparator');
 const AssetInspector = require('./asset-inspector');
 const EnhancedVersionDetector = require('./enhanced-version-detector');
+const WordPressOrgAPI = require('../integrations/wordpress-org');
 
 /**
  * WordPress plugin detection with comprehensive pattern matching
@@ -16,6 +17,7 @@ class PluginDetector {
         this.httpClient = httpClient || new HttpClient();
         this.assetInspector = new AssetInspector(this.httpClient);
         this.versionDetector = new EnhancedVersionDetector(this.httpClient);
+        this.wpOrgAPI = new WordPressOrgAPI();
     }
 
     /**
@@ -63,8 +65,12 @@ class PluginDetector {
             await this.checkPluginVersion(plugin);
         }
         
-        console.log(`✅ Plugin detection complete: ${filteredPlugins.length} plugins found`);
-        return filteredPlugins;
+        // Phase 9: Enrich with WordPress.org metadata
+        console.log('Phase 9: Enriching with WordPress.org metadata...');
+        const enrichedPlugins = await this.enrichPluginsWithMetadata(filteredPlugins);
+        
+        console.log(`✅ Plugin detection complete: ${enrichedPlugins.length} plugins found`);
+        return enrichedPlugins;
     }
 
     /**
@@ -301,12 +307,12 @@ class PluginDetector {
                 data.sources.add('readme_file');
             }
             
-            // Try main plugin files
-            const mainVersion = await this.fetchMainPluginFile(baseUrl, pluginName);
-            if (mainVersion) {
-                data.versions.add(mainVersion);
-                data.sources.add('main_file');
-            }
+            // Skip main plugin file fetching to avoid delays - versions already detected from other sources
+            // const mainVersion = await this.fetchMainPluginFile(baseUrl, pluginName);
+            // if (mainVersion) {
+            //     data.versions.add(mainVersion);
+            //     data.sources.add('main_file');
+            // }
             
             enhanced.set(pluginName, data);
         }
@@ -321,12 +327,13 @@ class PluginDetector {
      * @returns {string|null} Version or null
      */
     async fetchPluginReadme(baseUrl, pluginName) {
-        const readmeFiles = ['readme.txt', 'README.txt', 'readme.md', 'README.md'];
+        // Skip README.md files as they're usually not present and cause delays
+        const readmeFiles = ['readme.txt', 'README.txt'];
         
         for (const readme of readmeFiles) {
             const url = `${baseUrl}/wp-content/plugins/${pluginName}/${readme}`;
             try {
-                const response = await this.httpClient.fetchPage(url, { timeout: 5000 });
+                const response = await this.httpClient.fetchPage(url, { timeout: 2000 });
                 if (response && response.data) {
                     const content = response.data;
                     
@@ -1254,6 +1261,113 @@ class PluginDetector {
         }
         
         return recommendations;
+    }
+
+    /**
+     * Enrich detected plugins with WordPress.org metadata
+     * @param {Array} plugins - Array of detected plugins
+     * @returns {Array} Enriched plugins with metadata
+     */
+    async enrichPluginsWithMetadata(plugins) {
+        if (!plugins || plugins.length === 0) return plugins;
+
+        console.log(`📊 Enriching ${plugins.length} plugins with WordPress.org metadata...`);
+        
+        const enrichedPlugins = [];
+        
+        for (const plugin of plugins) {
+            try {
+                // Extract plugin slug from various identifiers
+                const pluginSlug = WordPressOrgAPI.extractPluginSlug(
+                    plugin.slug || plugin.name || plugin.identifier
+                );
+                
+                if (pluginSlug) {
+                    const metadata = await this.wpOrgAPI.getPluginInfo(pluginSlug);
+                    
+                    if (metadata) {
+                        // Merge metadata with existing plugin data
+                        enrichedPlugins.push({
+                            ...plugin,
+                            wp_org_metadata: {
+                                slug: metadata.slug,
+                                name: metadata.name,
+                                version: metadata.version,
+                                rating: metadata.rating,
+                                num_ratings: metadata.num_ratings,
+                                active_installs: metadata.active_installs,
+                                last_updated: metadata.last_updated,
+                                short_description: metadata.short_description,
+                                homepage: metadata.homepage,
+                                tags: metadata.tags,
+                                requires: metadata.requires,
+                                tested: metadata.tested,
+                                requires_php: metadata.requires_php,
+                                quality_score: this.calculatePluginQualityScore(metadata)
+                            }
+                        });
+                    } else {
+                        // Keep original plugin data if no metadata found
+                        enrichedPlugins.push(plugin);
+                    }
+                } else {
+                    // Keep original plugin data if no slug could be extracted
+                    enrichedPlugins.push(plugin);
+                }
+            } catch (error) {
+                console.warn(`Failed to enrich plugin ${plugin.name}:`, error.message);
+                enrichedPlugins.push(plugin);
+            }
+        }
+        
+        console.log(`✅ Enriched ${enrichedPlugins.filter(p => p.wp_org_metadata).length} plugins with metadata`);
+        return enrichedPlugins;
+    }
+
+    /**
+     * Calculate a quality score for a plugin based on WordPress.org data
+     * @param {Object} metadata - WordPress.org plugin metadata
+     * @returns {number} Quality score (0-100)
+     */
+    calculatePluginQualityScore(metadata) {
+        let score = 0;
+        
+        // Rating weight (40%)
+        if (metadata.rating && metadata.num_ratings > 0) {
+            score += (metadata.rating / 5) * 40;
+        }
+        
+        // Active installs weight (30%)
+        if (metadata.active_installs) {
+            if (metadata.active_installs >= 1000000) score += 30;
+            else if (metadata.active_installs >= 100000) score += 25;
+            else if (metadata.active_installs >= 10000) score += 20;
+            else if (metadata.active_installs >= 1000) score += 15;
+            else if (metadata.active_installs >= 100) score += 10;
+            else score += 5;
+        }
+        
+        // Update frequency weight (20%)
+        if (metadata.last_updated) {
+            const lastUpdate = new Date(metadata.last_updated);
+            const now = new Date();
+            const daysSinceUpdate = (now - lastUpdate) / (1000 * 60 * 60 * 24);
+            
+            if (daysSinceUpdate <= 30) score += 20;
+            else if (daysSinceUpdate <= 90) score += 15;
+            else if (daysSinceUpdate <= 180) score += 10;
+            else if (daysSinceUpdate <= 365) score += 5;
+        }
+        
+        // WordPress compatibility weight (10%)
+        if (metadata.tested) {
+            const testedVersion = parseFloat(metadata.tested);
+            if (testedVersion >= 6.0) score += 10;
+            else if (testedVersion >= 5.0) score += 7;
+            else if (testedVersion >= 4.0) score += 5;
+        }
+        
+        return Math.round(Math.min(score, 100));
     }
 
     /**

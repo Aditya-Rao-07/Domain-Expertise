@@ -58,7 +58,7 @@ class EnhancedVersionDetector {
             () => this.detectFromMetaGenerator($),
             () => this.detectFromReadmeFile(baseUrl),
             () => this.detectFromRestAPI(baseUrl),
-            () => this.detectFromWordPressCoreFiles(baseUrl)
+            // () => this.detectFromWordPressCoreFiles(baseUrl) // Disabled to avoid delays
         ];
 
         // MEDIUM CONFIDENCE METHODS - WordPress-specific but need validation

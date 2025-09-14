@@ -3,7 +3,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const WordPressAnalyzer = require('./index');
+const WordPressAnalyzer = require('./src/wordpress-analyzer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;

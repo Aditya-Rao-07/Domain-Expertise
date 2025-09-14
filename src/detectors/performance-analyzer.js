@@ -149,7 +149,10 @@ class PerformanceAnalyzer {
                         pluginName,
                         fileInfo,
                         media: $(link).attr('media')
-                    })));
+                    })).catch(error => {
+                        console.warn(`Failed to analyze CSS file ${href}:`, error.message);
+                        return { pluginName, fileInfo: null, media: $(link).attr('media') };
+                    }));
                 }
             }
         });
@@ -166,7 +169,10 @@ class PerformanceAnalyzer {
                         fileInfo,
                         async: $(script).attr('async'),
                         defer: $(script).attr('defer')
-                    })));
+                    })).catch(error => {
+                        console.warn(`Failed to analyze JS file ${src}:`, error.message);
+                        return { pluginName, fileInfo: null, async: $(script).attr('async'), defer: $(script).attr('defer') };
+                    }));
                 }
             }
         });
@@ -179,6 +185,11 @@ class PerformanceAnalyzer {
             if (result.status === 'fulfilled' && result.value) {
                 const { pluginName, fileInfo, media, async, defer } = result.value;
                 
+                // Skip if fileInfo is null (failed to analyze)
+                if (!fileInfo || !fileInfo.type) {
+                    return;
+                }
+                
                 if (!pluginResources.has(pluginName)) {
                     pluginResources.set(pluginName, getDefaultPluginData());
                 }
@@ -187,10 +198,10 @@ class PerformanceAnalyzer {
                 
                 if (fileInfo.type === 'css') {
                     pluginData.css_files.push(fileInfo);
-                    pluginData.css_size += fileInfo.size;
-                    pluginData.css_load_time += fileInfo.load_time;
+                    pluginData.css_size += fileInfo.size || 0;
+                    pluginData.css_load_time += fileInfo.load_time || 0;
                     pluginData.total_requests += 1;
-                    pluginData.total_size += fileInfo.size;
+                    pluginData.total_size += fileInfo.size || 0;
                     
                     // Check if it's render-blocking
                     if (!media || media === 'all') {
@@ -198,10 +209,10 @@ class PerformanceAnalyzer {
                     }
                 } else if (fileInfo.type === 'js') {
                     pluginData.js_files.push(fileInfo);
-                    pluginData.js_size += fileInfo.size;
-                    pluginData.js_load_time += fileInfo.load_time;
+                    pluginData.js_size += fileInfo.size || 0;
+                    pluginData.js_load_time += fileInfo.load_time || 0;
                     pluginData.total_requests += 1;
-                    pluginData.total_size += fileInfo.size;
+                    pluginData.total_size += fileInfo.size || 0;
                     
                     // Check if it's render-blocking (no async/defer)
                     if (!async && !defer) {
@@ -232,24 +243,28 @@ class PerformanceAnalyzer {
         
         // Simple heuristic: check if plugin CSS classes exist in HTML
         $('link[rel="stylesheet"]').each((i, link) => {
-            const href = $(link).attr('href');
-            if (href && href.includes('/wp-content/plugins/')) {
-                const pluginName = this.extractPluginNameFromUrl(href);
-                if (pluginName) {
-                    if (!pluginUsage.has(pluginName)) {
-                        pluginUsage.set(pluginName, getDefaultUsageData());
-                    }
-                    
-                    // Check if plugin-related classes exist in HTML
-                    const pluginClasses = this.findPluginCssUsage(html, pluginName);
-                    const usageData = pluginUsage.get(pluginName);
-                    usageData.css_rules_used = pluginClasses.length;
-                    
-                    // If no classes found, likely unused on this page
-                    if (pluginClasses.length === 0) {
-                        usageData.likely_unused = true;
+            try {
+                const href = $(link).attr('href');
+                if (href && href.includes('/wp-content/plugins/')) {
+                    const pluginName = this.extractPluginNameFromUrl(href);
+                    if (pluginName) {
+                        if (!pluginUsage.has(pluginName)) {
+                            pluginUsage.set(pluginName, getDefaultUsageData());
+                        }
+                        
+                        // Check if plugin-related classes exist in HTML
+                        const pluginClasses = this.findPluginCssUsage(html, pluginName);
+                        const usageData = pluginUsage.get(pluginName);
+                        usageData.css_rules_used = pluginClasses.length;
+                        
+                        // If no classes found, likely unused on this page
+                        if (pluginClasses.length === 0) {
+                            usageData.likely_unused = true;
+                        }
                     }
                 }
+            } catch (error) {
+                console.warn('Error analyzing CSS usage:', error.message);
             }
         });
         
@@ -423,36 +438,110 @@ class PerformanceAnalyzer {
     async analyze() {
         console.log('🔍 Starting plugin performance analysis...');
         
-        // Step 1: Basic page analysis
-        const { content, timing } = await this.fetchPageWithTiming();
-        if (!content) {
-            return null;
+        try {
+            // Optional: pull Core Web Vitals via PageSpeed Insights
+            let pagespeedMobile = null;
+            let pagespeedDesktop = null;
+            try {
+                console.log('🔍 Fetching PageSpeed Insights data...');
+                const PageSpeed = require('../integrations/pagespeed');
+                
+                // Fetch both mobile and desktop data in a single optimized call
+                const psiResult = await PageSpeed.fetchBoth(this.baseUrl);
+                
+                if (psiResult) {
+                    pagespeedMobile = psiResult.mobile;
+                    pagespeedDesktop = psiResult.desktop;
+                    
+                    if (pagespeedMobile) {
+                        console.log('✅ PSI mobile data fetched successfully');
+                    }
+                    if (pagespeedDesktop) {
+                        console.log('✅ PSI desktop data fetched successfully');
+                    }
+                    
+                    if (!pagespeedMobile && !pagespeedDesktop) {
+                        console.warn('⚠️ PSI data unavailable for both mobile and desktop - continuing without Core Web Vitals');
+                    }
+                } else {
+                    console.warn('⚠️ PSI fetch returned null - continuing without Core Web Vitals');
+                }
+                
+            } catch (e) {
+                console.error('❌ PSI integration failed:', e.message);
+                // PSI optional; continue silently
+            }
+            // Step 1: Basic page analysis
+            const { content, timing } = await this.fetchPageWithTiming();
+            if (!content) {
+                console.warn('No content fetched for performance analysis');
+                return null;
+            }
+            
+            // Step 2: Plugin resource performance
+            let performanceData = {};
+            try {
+                performanceData = await this.analyzeResourcePerformance(content);
+            } catch (error) {
+                console.warn('Error in resource performance analysis:', error.message);
+                performanceData = {};
+            }
+            
+            // Step 3: Usage analysis
+            let usageAnalysis = {};
+            try {
+                usageAnalysis = this.detectUnusedCssJs(content);
+            } catch (error) {
+                console.warn('Error in usage analysis:', error.message);
+                usageAnalysis = {};
+            }
+            
+            // Step 4: Calculate performance scores
+            try {
+                for (const [pluginName, data] of Object.entries(performanceData)) {
+                    if (data && typeof data === 'object') {
+                        data.performance_score = this.calculatePerformanceScore(data);
+                    }
+                }
+            } catch (error) {
+                console.warn('Error calculating performance scores:', error.message);
+            }
+            
+            // Step 5: Generate recommendations
+            let recommendations = [];
+            try {
+                recommendations = this.generateRecommendations(performanceData);
+            } catch (error) {
+                console.warn('Error generating recommendations:', error.message);
+                recommendations = [];
+            }
+            
+            // Combine all data
+            this.performanceData = {
+                main_page_timing: timing || {},
+                plugin_performance: performanceData || {},
+                usage_analysis: usageAnalysis || {},
+                optimization_opportunities: this.identifyOptimizationOpportunities(performanceData) || [],
+                pagespeed: {
+                    mobile: pagespeedMobile,
+                    desktop: pagespeedDesktop
+                },
+                recommendations: recommendations || []
+            };
+            
+            return this.performanceData;
+            
+        } catch (error) {
+            console.error('Critical error in performance analysis:', error.message);
+            return {
+                main_page_timing: {},
+                plugin_performance: {},
+                usage_analysis: {},
+                optimization_opportunities: [],
+                recommendations: [],
+                error: error.message
+            };
         }
-        
-        // Step 2: Plugin resource performance
-        const performanceData = await this.analyzeResourcePerformance(content);
-        
-        // Step 3: Usage analysis
-        const usageAnalysis = this.detectUnusedCssJs(content);
-        
-        // Step 4: Calculate performance scores
-        for (const [pluginName, data] of Object.entries(performanceData)) {
-            data.performance_score = this.calculatePerformanceScore(data);
-        }
-        
-        // Step 5: Generate recommendations
-        const recommendations = this.generateRecommendations(performanceData);
-        
-        // Combine all data
-        this.performanceData = {
-            main_page_timing: timing,
-            plugin_performance: performanceData,
-            usage_analysis: usageAnalysis,
-            optimization_opportunities: this.identifyOptimizationOpportunities(performanceData),
-            recommendations: recommendations
-        };
-        
-        return this.performanceData;
     }
 }
 

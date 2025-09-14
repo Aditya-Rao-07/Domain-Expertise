@@ -17,7 +17,8 @@ class JsonReporter {
             version: this.generateVersionSection(results),
             theme: this.generateThemeSection(results),
             plugins: this.generatePluginsSection(results),
-            performance: this.generatePerformanceSection(results)
+            performance: this.generatePerformanceSection(results),
+            recommendations: this.generateRecommendationsSection(results)
         };
 
         if (options.includeRawData) {
@@ -197,6 +198,190 @@ class JsonReporter {
                 estimatedImpact: this.estimatePerformanceImpact(plugins)
             }
         };
+    }
+
+    /**
+     * Generate recommendations section
+     * @param {Object} results - Analysis results
+     * @returns {Object} Recommendations data
+     */
+    static generateRecommendationsSection(results) {
+        if (!results.recommendations) {
+            return {
+                available: false,
+                message: 'Recommendations not generated'
+            };
+        }
+
+        const recommendations = results.recommendations;
+        
+        return {
+            available: true,
+            summary: recommendations.summary || {},
+            analysis: {
+                enhanced_asset_analysis: recommendations.analysis?.enhanced_asset_analysis || null,
+                performance_analysis: recommendations.analysis?.performance_analysis || null,
+                functionality_analysis: recommendations.analysis?.functionality_analysis || null
+            },
+            recommendations: {
+                performance: recommendations.recommendations?.performance || [],
+                functionality: recommendations.recommendations?.functionality || [],
+                compatibility: recommendations.recommendations?.compatibility || [],
+                optimization: recommendations.recommendations?.optimization || []
+            },
+            top_recommendations: this.getTopRecommendations(recommendations),
+            implementation_guide: this.generateImplementationGuide(recommendations)
+        };
+    }
+
+    /**
+     * Get top recommendations across all categories
+     * @param {Object} recommendations - Recommendations data
+     * @returns {Array} Top recommendations
+     */
+    static getTopRecommendations(recommendations) {
+        const allRecs = [
+            ...(recommendations.recommendations?.performance || []),
+            ...(recommendations.recommendations?.functionality || []),
+            ...(recommendations.recommendations?.compatibility || []),
+            ...(recommendations.recommendations?.optimization || [])
+        ];
+
+        // Sort by priority and return top 10
+        return allRecs
+            .sort((a, b) => {
+                const priorityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
+                return priorityOrder[b.priority] - priorityOrder[a.priority];
+            })
+            .slice(0, 10)
+            .map(rec => ({
+                plugin: rec.plugin,
+                name: rec.name,
+                category: rec.category,
+                priority: rec.priority,
+                description: rec.description,
+                reason: rec.reason
+            }));
+    }
+
+    /**
+     * Generate implementation guide
+     * @param {Object} recommendations - Recommendations data
+     * @returns {Object} Implementation guide
+     */
+    static generateImplementationGuide(recommendations) {
+        const allRecs = [
+            ...(recommendations.recommendations?.performance || []),
+            ...(recommendations.recommendations?.functionality || []),
+            ...(recommendations.recommendations?.compatibility || []),
+            ...(recommendations.recommendations?.optimization || [])
+        ];
+
+        const highPriority = allRecs.filter(r => r.priority === 'high');
+        const mediumPriority = allRecs.filter(r => r.priority === 'medium');
+        const lowPriority = allRecs.filter(r => r.priority === 'low');
+
+        return {
+            phases: {
+                immediate: {
+                    description: 'High priority recommendations to implement first',
+                    recommendations: highPriority.slice(0, 3).map(rec => ({
+                        plugin: rec.plugin,
+                        name: rec.name,
+                        reason: rec.reason,
+                        estimated_effort: this.estimateEffort(rec)
+                    }))
+                },
+                short_term: {
+                    description: 'Medium priority recommendations for next phase',
+                    recommendations: mediumPriority.slice(0, 5).map(rec => ({
+                        plugin: rec.plugin,
+                        name: rec.name,
+                        reason: rec.reason,
+                        estimated_effort: this.estimateEffort(rec)
+                    }))
+                },
+                long_term: {
+                    description: 'Low priority recommendations for future consideration',
+                    recommendations: lowPriority.slice(0, 3).map(rec => ({
+                        plugin: rec.plugin,
+                        name: rec.name,
+                        reason: rec.reason,
+                        estimated_effort: this.estimateEffort(rec)
+                    }))
+                }
+            },
+            estimated_total_effort: this.calculateTotalEffort(allRecs),
+            implementation_tips: this.generateImplementationTips(allRecs)
+        };
+    }
+
+    /**
+     * Estimate implementation effort for a recommendation
+     * @param {Object} recommendation - Plugin recommendation
+     * @returns {string} Effort estimate
+     */
+    static estimateEffort(recommendation) {
+        const effortMap = {
+            'contact-form-7': '30 minutes',
+            'wpforms-lite': '1 hour',
+            'woocommerce': '2-4 hours',
+            'wordpress-seo': '1-2 hours',
+            'wordfence': '30 minutes',
+            'updraftplus': '30 minutes',
+            'wp-rocket': '1 hour',
+            'autoptimize': '1 hour'
+        };
+
+        return effortMap[recommendation.plugin] || '1-2 hours';
+    }
+
+    /**
+     * Calculate total implementation effort
+     * @param {Array} recommendations - All recommendations
+     * @returns {string} Total effort estimate
+     */
+    static calculateTotalEffort(recommendations) {
+        const highPriority = recommendations.filter(r => r.priority === 'high').length;
+        const mediumPriority = recommendations.filter(r => r.priority === 'medium').length;
+        const lowPriority = recommendations.filter(r => r.priority === 'low').length;
+
+        const totalHours = (highPriority * 1.5) + (mediumPriority * 1) + (lowPriority * 0.5);
+        
+        if (totalHours <= 2) return '2-4 hours';
+        if (totalHours <= 6) return '4-8 hours';
+        if (totalHours <= 12) return '1-2 days';
+        return '2-3 days';
+    }
+
+    /**
+     * Generate implementation tips
+     * @param {Array} recommendations - All recommendations
+     * @returns {Array} Implementation tips
+     */
+    static generateImplementationTips(recommendations) {
+        const tips = [
+            'Always backup your site before installing new plugins',
+            'Test plugins on a staging site first if possible',
+            'Install and configure one plugin at a time',
+            'Monitor site performance after each plugin installation',
+            'Keep plugins updated regularly for security and compatibility'
+        ];
+
+        // Add specific tips based on recommendations
+        if (recommendations.some(r => r.category === 'security')) {
+            tips.push('Security plugins should be configured immediately after installation');
+        }
+
+        if (recommendations.some(r => r.category === 'performance')) {
+            tips.push('Performance plugins may require server-level configuration');
+        }
+
+        if (recommendations.some(r => r.category === 'ecommerce')) {
+            tips.push('E-commerce plugins require SSL certificate and payment gateway setup');
+        }
+
+        return tips;
     }
 
     /**
