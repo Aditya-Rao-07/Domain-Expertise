@@ -246,18 +246,11 @@ app.post('/api/analyze/email', async (req, res) => {
                 }
             });
             
-        } catch (pdfError) {
-            console.error('❌ PDF generation failed:', pdfError.message);
+        } catch (error) {
+            console.error('❌ PDF generation or email sending failed:', error.message);
             return res.status(500).json({
                 success: false,
-                error: `PDF generation failed: ${pdfError.message}`,
-                data: results
-            });
-        } catch (emailError) {
-            console.error('❌ Email sending failed:', emailError.message);
-            return res.status(500).json({
-                success: false,
-                error: `Email sending failed: ${emailError.message}`,
+                error: `PDF generation or email sending failed: ${error.message}`,
                 data: results
             });
         }

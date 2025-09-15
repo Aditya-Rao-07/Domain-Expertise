@@ -1077,10 +1077,6 @@ class HtmlReporter {
             }
 
             @media (max-width: 768px) {
-                .site-analysis-container {
-                    padding: 1rem;
-                    margin: 0.5rem;
-                }
 
                 .analysis-title {
                     font-size: 1.875rem;
@@ -1413,7 +1409,7 @@ class HtmlReporter {
                 }
 
                 .info-grid {
-                    grid-template-columns: 1fr;
+                    grid-template-columns: repeat(2, 1fr);
                 }
 
                 .plugin-header {

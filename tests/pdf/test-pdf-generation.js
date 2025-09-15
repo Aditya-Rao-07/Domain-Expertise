@@ -1,5 +1,6 @@
 // File: ./test-pdf-generation.js
 
+require('dotenv').config(); // Load environment variables
 const WordPressAnalyzer = require('../../src/wordpress-analyzer');
 const fs = require('fs');
 const path = require('path');

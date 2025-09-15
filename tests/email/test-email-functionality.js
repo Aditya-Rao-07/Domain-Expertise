@@ -1,5 +1,6 @@
 // File: ./test-email-functionality.js
 
+require('dotenv').config(); // Load environment variables
 const EmailService = require('../../src/services/email-service');
 const WordPressAnalyzer = require('../../src/wordpress-analyzer');
 const axios = require('axios');
@@ -49,7 +50,7 @@ async function testEmailEndpoint() {
     console.log('\n🌐 Testing Email API Endpoints\n');
     
     const serverUrl = 'http://localhost:3000';
-    const testEmail = process.env.TEST_EMAIL || 'test@example.com';
+    const testEmail = process.env.TEST_EMAIL;
     const testUrl = 'https://calvin-ld.wisdmlabs.net';
     
     try {
