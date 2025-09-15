@@ -91,8 +91,15 @@ wordpress-report-*.html
 *.analysis.json
 *.analysis.html
 analysis-results/
+
+# Test outputs and temporary files
 test-pdf-output/
-test-pdf-generation.js
+test-email-output/
+tests/output/
+tests/temp/
+*.test.pdf
+*.test.html
+test-results/
 
 # Backup files
 *-old.js

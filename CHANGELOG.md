@@ -8,12 +8,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Test Organization**: Reorganized all test scripts into a dedicated `tests/` directory for better maintainability
+- **Test Structure**: Created organized test categories (pdf/, email/, api/) with comprehensive documentation
+- **Test Documentation**: Added detailed testing guide in `tests/README.md` with setup instructions and examples
 - **PDF Generation**: Complete PDF report generation using Puppeteer with multiple format options
 - **PDF API Endpoint**: New `/api/analyze/pdf` endpoint for generating PDF reports via HTTP
 - **Multiple PDF Formats**: Standard, print-optimized, and landscape PDF generation options
 - **Custom PDF Options**: Configurable margins, page sizes, headers, and footers
 - **PDF Testing Suite**: Comprehensive test scripts for PDF generation functionality
 - **PDF Documentation**: Complete guide for PDF generation usage and API integration
+- **Email Integration**: Complete email service for sending analysis reports via email
+- **Email API Endpoints**: New `/api/analyze/email`, `/api/email/test`, and `/api/email/config` endpoints
+- **Professional Email Templates**: HTML and text email templates with analysis summaries
+- **PDF Email Attachments**: Automatic PDF report attachment to emails
+- **Multiple Email Providers**: Support for Gmail, Outlook, and custom SMTP configurations
+- **Email Testing Suite**: Comprehensive test scripts for email functionality
+- **Email Documentation**: Complete guide for email setup and usage
+
+### Changed
+- **Test Scripts**: Moved all test scripts from root directory to organized `tests/` folder structure
+- **Package Scripts**: Updated npm scripts to reference new test file locations
+- **Project Structure**: Improved maintainability with dedicated test directories and documentation
+- **Security**: Removed hardcoded PageSpeed Insights API key from source code and moved to environment variables
 
 ### Fixed
 - **Frontend JavaScript**: Fixed missing JavaScript code that prevented the "Analyze Site" button from working

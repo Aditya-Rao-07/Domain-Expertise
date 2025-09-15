@@ -16,9 +16,15 @@
     "server": "node start-server.js",
     "test-fix": "node test-performance-fix.js",
     "test-recommendations": "node test-fixes.js",
-    "test-pdf": "node test-pdf-generation.js",
-    "test-pdf-api": "node test-pdf-generation.js --api-only",
-    "test-pdf-direct": "node test-pdf-generation.js --direct-only"
+    "test-pdf": "node tests/pdf/test-pdf-generation.js",
+    "test-pdf-api": "node tests/pdf/test-pdf-generation.js --api-only",
+    "test-pdf-direct": "node tests/pdf/test-pdf-generation.js --direct-only",
+    "test-email": "node tests/email/test-email-functionality.js",
+    "test-email-service": "node tests/email/test-email-functionality.js --service-only",
+    "test-email-api": "node tests/email/test-email-functionality.js --api-only",
+    "test-email-workflow": "node tests/email/test-email-functionality.js --workflow-only",
+    "email-setup": "node tests/email/test-email-functionality.js --setup",
+    "test-api": "node tests/api/test-api-endpoints.js"
   },
   "keywords": [
     "wordpress",
@@ -36,7 +42,9 @@
     "cheerio": "^1.0.0-rc.12",
     "express": "^4.18.2",
     "cors": "^2.8.5",
-    "puppeteer": "^21.0.0"
+    "puppeteer": "^21.0.0",
+    "nodemailer": "^6.9.0",
+    "dotenv": "^16.3.0"
   },
   "devDependencies": {},
   "engines": {

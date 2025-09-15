@@ -1,6 +1,6 @@
 // File: ./test-pdf-generation.js
 
-const WordPressAnalyzer = require('./src/wordpress-analyzer');
+const WordPressAnalyzer = require('../../src/wordpress-analyzer');
 const fs = require('fs');
 const path = require('path');
 

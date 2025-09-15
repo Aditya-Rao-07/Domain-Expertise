@@ -11,6 +11,7 @@ A comprehensive JavaScript tool for analyzing WordPress sites without admin acce
 - **Outdated Component Detection**: Checks if plugins are outdated compared to latest versions
 - **Comprehensive Reporting**: Generates detailed analysis reports in multiple formats
 - **PDF Generation**: Creates professional PDF reports using Puppeteer 🆕
+- **Email Integration**: Send analysis reports via email with PDF attachments 🆕
 - **Performance Analysis**: PageSpeed Insights integration with Core Web Vitals 🆕
 
 ## Detection Methods
@@ -209,6 +210,13 @@ curl -X POST http://localhost:3000/api/analyze/pdf \
   --output report.pdf
 ```
 
+**POST `/api/analyze/email`** - Send analysis report via email 🆕
+```bash
+curl -X POST http://localhost:3000/api/analyze/email \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com", "email": "client@example.com"}'
+```
+
 **GET `/api/health`** - Health check
 ```bash
 curl http://localhost:3000/api/health
@@ -235,6 +243,64 @@ curl -X POST http://localhost:3000/api/analyze/pdf \
   -d '{"url": "https://example.com", "format": "with-filename", "filename": "client-report.pdf"}' \
   --output client-report.pdf
 ```
+
+#### Email Integration Options
+
+```bash
+# Send standard report via email
+curl -X POST http://localhost:3000/api/analyze/email \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com", "email": "client@example.com"}'
+
+# Send print-optimized report via email
+curl -X POST http://localhost:3000/api/analyze/email \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com", "email": "client@example.com", "format": "print"}'
+
+# Test email configuration
+curl http://localhost:3000/api/email/config
+
+# Send test email
+curl -X POST http://localhost:3000/api/email/test \
+  -H "Content-Type: application/json" \
+  -d '{"email": "test@example.com"}'
+```
+
+## Testing
+
+All test scripts are organized in the `tests/` directory for better maintainability:
+
+### PDF Generation Tests
+```bash
+npm run test-pdf              # Run all PDF tests
+npm run test-pdf-direct       # Direct PDF generation only
+npm run test-pdf-api          # API endpoint tests only
+```
+
+### Email Integration Tests
+```bash
+npm run test-email            # Run all email tests
+npm run test-email-service    # Email service tests only
+npm run test-email-api        # Email API tests only
+npm run test-email-workflow   # End-to-end workflow test
+npm run email-setup           # Display setup instructions
+```
+
+### API Endpoint Tests
+```bash
+npm run test-api              # Test all API endpoints
+```
+
+### Test Structure
+```
+tests/
+├── pdf/                      # PDF generation tests
+├── email/                    # Email integration tests
+├── api/                      # API endpoint tests
+└── README.md                 # Detailed testing guide
+```
+
+See [tests/README.md](tests/README.md) for comprehensive testing documentation.
 
 ## Sample Output
 

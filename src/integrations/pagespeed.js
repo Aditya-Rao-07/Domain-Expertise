@@ -14,7 +14,7 @@ class PageSpeedInsights {
      * @param {number} maxRetries optional retry count
      * @returns {Promise<object|null>} Object with mobile and desktop data
      */
-    static async fetchBoth(url, apiKey = process.env.PSI_API_KEY || 'AIzaSyCU8z5ZLnKPLzn_YCRgzFNfuL84AcUzRwc', maxRetries = 3) {
+    static async fetchBoth(url, apiKey = process.env.PSI_API_KEY, maxRetries = 3) {
         console.log(`🔍 PSI fetching both mobile and desktop for ${url} (concurrent)`);
         
         // Create async tasks for both strategies with individual retry logic
@@ -80,7 +80,7 @@ class PageSpeedInsights {
      * @param {number} maxRetries optional retry count
      * @returns {Promise<object|null>}
      */
-    static async fetch(url, strategy = 'mobile', apiKey = process.env.PSI_API_KEY || 'AIzaSyCU8z5ZLnKPLzn_YCRgzFNfuL84AcUzRwc', maxRetries = 3) {
+    static async fetch(url, strategy = 'mobile', apiKey = process.env.PSI_API_KEY, maxRetries = 3) {
         return await this.fetchWithRetry(url, strategy, apiKey, maxRetries);
     }
 
