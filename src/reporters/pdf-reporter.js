@@ -1,0 +1,350 @@
+// File: ./src/reporters/pdf-reporter.js
+
+const puppeteer = require('puppeteer');
+const HtmlReporter = require('./html-reporter');
+
+/**
+ * PDF reporter for WordPress analysis results
+ * Generates professional PDF reports using Puppeteer
+ */
+class PdfReporter {
+    /**
+     * Generate PDF report from analysis results
+     * @param {Object} results - Analysis results
+     * @param {Object} options - PDF generation options
+     * @returns {Buffer} PDF buffer
+     */
+    static async generate(results, options = {}) {
+        const defaultOptions = {
+            format: 'A4',
+            printBackground: true,
+            margin: {
+                top: '1cm',
+                right: '1cm',
+                bottom: '1cm',
+                left: '1cm'
+            },
+            displayHeaderFooter: true,
+            headerTemplate: this.getHeaderTemplate(),
+            footerTemplate: this.getFooterTemplate(),
+            preferCSSPageSize: false,
+            ...options
+        };
+
+        let browser;
+        try {
+            // Generate HTML content using existing HtmlReporter
+            const html = HtmlReporter.generate(results, options);
+            
+            // Launch Puppeteer browser
+            browser = await puppeteer.launch({
+                headless: true,
+                args: [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-accelerated-2d-canvas',
+                    '--no-first-run',
+                    '--no-zygote',
+                    '--disable-gpu'
+                ]
+            });
+
+            const page = await browser.newPage();
+            
+            // Set viewport for consistent rendering
+            await page.setViewport({
+                width: 1200,
+                height: 800,
+                deviceScaleFactor: 1
+            });
+
+            // Set content and wait for all resources to load
+            await page.setContent(html, {
+                waitUntil: ['networkidle0', 'domcontentloaded'],
+                timeout: 30000
+            });
+
+            // Wait for fonts to load
+            await page.evaluateHandle('document.fonts.ready');
+
+            // Generate PDF
+            const pdfBuffer = await page.pdf(defaultOptions);
+            
+            return pdfBuffer;
+
+        } catch (error) {
+            console.error('PDF generation failed:', error);
+            throw new Error(`PDF generation failed: ${error.message}`);
+        } finally {
+            if (browser) {
+                await browser.close();
+            }
+        }
+    }
+
+    /**
+     * Generate PDF report with custom filename
+     * @param {Object} results - Analysis results
+     * @param {string} filename - Custom filename
+     * @param {Object} options - PDF generation options
+     * @returns {Object} Object with PDF buffer and metadata
+     */
+    static async generateWithFilename(results, filename, options = {}) {
+        const pdfBuffer = await this.generate(results, options);
+        const reportData = HtmlReporter.processResults(results);
+        
+        return {
+            buffer: pdfBuffer,
+            filename: filename || this.generateFilename(reportData),
+            contentType: 'application/pdf',
+            size: pdfBuffer.length
+        };
+    }
+
+    /**
+     * Generate default filename based on report data
+     * @param {Object} reportData - Processed report data
+     * @returns {string} Generated filename
+     */
+    static generateFilename(reportData) {
+        const domain = reportData.domain || 'unknown-site';
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+        return `wordpress-analysis-${domain}-${timestamp}.pdf`;
+    }
+
+    /**
+     * Get header template for PDF
+     * @returns {string} Header HTML template
+     */
+    static getHeaderTemplate() {
+        return `
+            <div style="font-size: 10px; padding: 0 1cm; width: 100%; text-align: center; color: #666;">
+                <span class="title"></span>
+            </div>
+        `;
+    }
+
+    /**
+     * Get footer template for PDF
+     * @returns {string} Footer HTML template
+     */
+    static getFooterTemplate() {
+        return `
+            <div style="font-size: 10px; padding: 0 1cm; width: 100%; display: flex; justify-content: space-between; color: #666;">
+                <span>WordPress Site Analyzer v2.0.0</span>
+                <span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
+                <span class="date"></span>
+            </div>
+        `;
+    }
+
+    /**
+     * Generate PDF with custom styling for print
+     * @param {Object} results - Analysis results
+     * @param {Object} options - PDF generation options
+     * @returns {Buffer} PDF buffer
+     */
+    static async generatePrintOptimized(results, options = {}) {
+        const printOptions = {
+            format: 'A4',
+            printBackground: true,
+            margin: {
+                top: '1.5cm',
+                right: '1cm',
+                bottom: '1.5cm',
+                left: '1cm'
+            },
+            displayHeaderFooter: true,
+            headerTemplate: this.getHeaderTemplate(),
+            footerTemplate: this.getFooterTemplate(),
+            preferCSSPageSize: false,
+            ...options
+        };
+
+        let browser;
+        try {
+            // Generate HTML with print-specific modifications
+            const html = HtmlReporter.generate(results, {
+                ...options,
+                printOptimized: true
+            });
+            
+            browser = await puppeteer.launch({
+                headless: true,
+                args: [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-accelerated-2d-canvas',
+                    '--no-first-run',
+                    '--no-zygote',
+                    '--disable-gpu'
+                ]
+            });
+
+            const page = await browser.newPage();
+            
+            // Set viewport
+            await page.setViewport({
+                width: 1200,
+                height: 800,
+                deviceScaleFactor: 1
+            });
+
+            // Set content
+            await page.setContent(html, {
+                waitUntil: ['networkidle0', 'domcontentloaded'],
+                timeout: 30000
+            });
+
+            // Wait for fonts
+            await page.evaluateHandle('document.fonts.ready');
+
+            // Add print-specific CSS
+            await page.addStyleTag({
+                content: this.getPrintCSS()
+            });
+
+            // Generate PDF
+            const pdfBuffer = await page.pdf(printOptions);
+            
+            return pdfBuffer;
+
+        } catch (error) {
+            console.error('Print-optimized PDF generation failed:', error);
+            throw new Error(`Print-optimized PDF generation failed: ${error.message}`);
+        } finally {
+            if (browser) {
+                await browser.close();
+            }
+        }
+    }
+
+    /**
+     * Get print-specific CSS for better PDF rendering
+     * @returns {string} Print CSS
+     */
+    static getPrintCSS() {
+        return `
+            @media print {
+                body {
+                    -webkit-print-color-adjust: exact !important;
+                    color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                }
+                
+                .container {
+                    max-width: none !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    box-shadow: none !important;
+                    border-radius: 0 !important;
+                }
+                
+                .section {
+                    break-inside: avoid;
+                    page-break-inside: avoid;
+                }
+                
+                .card, .plugin-item, .issue-card, .fix-card {
+                    break-inside: avoid;
+                    page-break-inside: avoid;
+                }
+                
+                .section-title {
+                    break-after: avoid;
+                    page-break-after: avoid;
+                }
+                
+                .executive-summary {
+                    break-after: avoid;
+                    page-break-after: avoid;
+                }
+                
+                .header {
+                    break-after: avoid;
+                    page-break-after: avoid;
+                }
+                
+                /* Ensure colors are preserved */
+                .status-success, .status-warning, .status-danger,
+                .bg-red-100, .bg-yellow-100, .bg-green-100,
+                .text-red-600, .text-yellow-600, .text-green-600 {
+                    -webkit-print-color-adjust: exact !important;
+                    color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                }
+                
+                /* Hide interactive elements */
+                .material-symbols-outlined {
+                    font-family: 'Material Symbols Outlined' !important;
+                }
+                
+                /* Optimize spacing for print */
+                .section {
+                    margin-bottom: 1rem !important;
+                }
+                
+                .card, .plugin-item {
+                    margin-bottom: 0.5rem !important;
+                }
+            }
+        `;
+    }
+
+    /**
+     * Generate PDF with landscape orientation
+     * @param {Object} results - Analysis results
+     * @param {Object} options - PDF generation options
+     * @returns {Buffer} PDF buffer
+     */
+    static async generateLandscape(results, options = {}) {
+        const landscapeOptions = {
+            format: 'A4',
+            landscape: true,
+            printBackground: true,
+            margin: {
+                top: '1cm',
+                right: '1cm',
+                bottom: '1cm',
+                left: '1cm'
+            },
+            displayHeaderFooter: true,
+            headerTemplate: this.getHeaderTemplate(),
+            footerTemplate: this.getFooterTemplate(),
+            preferCSSPageSize: false,
+            ...options
+        };
+
+        return await this.generate(results, landscapeOptions);
+    }
+
+    /**
+     * Generate multiple PDF formats
+     * @param {Object} results - Analysis results
+     * @param {Object} options - PDF generation options
+     * @returns {Object} Object with different PDF formats
+     */
+    static async generateMultipleFormats(results, options = {}) {
+        const [standard, printOptimized, landscape] = await Promise.all([
+            this.generate(results, options),
+            this.generatePrintOptimized(results, options),
+            this.generateLandscape(results, options)
+        ]);
+
+        return {
+            standard,
+            printOptimized,
+            landscape,
+            metadata: {
+                standardSize: standard.length,
+                printOptimizedSize: printOptimized.length,
+                landscapeSize: landscape.length,
+                generatedAt: new Date().toISOString()
+            }
+        };
+    }
+}
+
+module.exports = PdfReporter;

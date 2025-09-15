@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **PDF Generation**: Complete PDF report generation using Puppeteer with multiple format options
+- **PDF API Endpoint**: New `/api/analyze/pdf` endpoint for generating PDF reports via HTTP
+- **Multiple PDF Formats**: Standard, print-optimized, and landscape PDF generation options
+- **Custom PDF Options**: Configurable margins, page sizes, headers, and footers
+- **PDF Testing Suite**: Comprehensive test scripts for PDF generation functionality
+- **PDF Documentation**: Complete guide for PDF generation usage and API integration
+
 ### Fixed
 - **Frontend JavaScript**: Fixed missing JavaScript code that prevented the "Analyze Site" button from working
 - **Server Import Path**: Corrected WordPressAnalyzer import path in server.js from './index' to './src/wordpress-analyzer'

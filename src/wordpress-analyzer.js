@@ -20,6 +20,7 @@ const PluginRecommendationEngine = require('./recommendations/plugin-recommendat
 const ConsoleReporter = require('./reporters/console-reporter');
 const JsonReporter = require('./reporters/json-reporter');
 const HtmlReporter = require('./reporters/html-reporter');
+const PdfReporter = require('./reporters/pdf-reporter');
 
 // Import configuration
 const { HTTP, ERRORS } = require('./config/constants');
@@ -305,6 +306,47 @@ class WordPressAnalyzer {
      */
     generateHtmlReport(results, options = {}) {
         return HtmlReporter.generate(results, options);
+    }
+
+    /**
+     * Generate PDF report
+     * @param {Object} results - Analysis results
+     * @param {Object} options - PDF generation options
+     * @returns {Promise<Buffer>} PDF buffer
+     */
+    async generatePdfReport(results, options = {}) {
+        return await PdfReporter.generate(results, options);
+    }
+
+    /**
+     * Generate PDF report with custom filename
+     * @param {Object} results - Analysis results
+     * @param {string} filename - Custom filename
+     * @param {Object} options - PDF generation options
+     * @returns {Promise<Object>} Object with PDF buffer and metadata
+     */
+    async generatePdfReportWithFilename(results, filename, options = {}) {
+        return await PdfReporter.generateWithFilename(results, filename, options);
+    }
+
+    /**
+     * Generate print-optimized PDF report
+     * @param {Object} results - Analysis results
+     * @param {Object} options - PDF generation options
+     * @returns {Promise<Buffer>} PDF buffer
+     */
+    async generatePrintOptimizedPdfReport(results, options = {}) {
+        return await PdfReporter.generatePrintOptimized(results, options);
+    }
+
+    /**
+     * Generate landscape PDF report
+     * @param {Object} results - Analysis results
+     * @param {Object} options - PDF generation options
+     * @returns {Promise<Buffer>} PDF buffer
+     */
+    async generateLandscapePdfReport(results, options = {}) {
+        return await PdfReporter.generateLandscape(results, options);
     }
 
     /**

@@ -9,7 +9,9 @@ A comprehensive JavaScript tool for analyzing WordPress sites without admin acce
 - **Theme Analysis**: Detects active theme name, version, and author
 - **Plugin Discovery**: Finds installed plugins and their versions
 - **Outdated Component Detection**: Checks if plugins are outdated compared to latest versions
-- **Comprehensive Reporting**: Generates detailed analysis reports
+- **Comprehensive Reporting**: Generates detailed analysis reports in multiple formats
+- **PDF Generation**: Creates professional PDF reports using Puppeteer 🆕
+- **Performance Analysis**: PageSpeed Insights integration with Core Web Vitals 🆕
 
 ## Detection Methods
 
@@ -149,6 +151,10 @@ async function analyzeWordPressSite() {
         
         // Generate HTML report
         const htmlReport = analyzer.generateHtmlReport(results);
+        
+        // Generate PDF report
+        const pdfBuffer = await analyzer.generatePdfReport(results);
+        
         const fs = require('fs');
         const path = require('path');
         
@@ -158,9 +164,14 @@ async function analyzeWordPressSite() {
             fs.mkdirSync(reportsDir);
         }
         
-        const filename = path.join(reportsDir, 'analysis-report.html');
-        fs.writeFileSync(filename, htmlReport);
-        console.log(`HTML report saved to ${filename}`);
+        const htmlFilename = path.join(reportsDir, 'analysis-report.html');
+        fs.writeFileSync(htmlFilename, htmlReport);
+        console.log(`HTML report saved to ${htmlFilename}`);
+        
+        // Save PDF report
+        const pdfFilename = path.join(reportsDir, 'analysis-report.pdf');
+        fs.writeFileSync(pdfFilename, pdfBuffer);
+        console.log(`PDF report saved to ${pdfFilename}`);
         
     } catch (error) {
         console.error('Analysis failed:', error.message);
@@ -168,6 +179,61 @@ async function analyzeWordPressSite() {
 }
 
 analyzeWordPressSite();
+```
+
+### Web Server API
+
+Start the web server to access the API endpoints:
+
+```bash
+# Start the web server
+npm run web
+
+# Server will be available at http://localhost:3000
+```
+
+#### Available Endpoints
+
+**POST `/api/analyze`** - Standard analysis
+```bash
+curl -X POST http://localhost:3000/api/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com"}'
+```
+
+**POST `/api/analyze/pdf`** - Generate PDF report 🆕
+```bash
+curl -X POST http://localhost:3000/api/analyze/pdf \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com"}' \
+  --output report.pdf
+```
+
+**GET `/api/health`** - Health check
+```bash
+curl http://localhost:3000/api/health
+```
+
+#### PDF Generation Options
+
+```bash
+# Print-optimized PDF
+curl -X POST http://localhost:3000/api/analyze/pdf \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com", "format": "print"}' \
+  --output print-report.pdf
+
+# Landscape PDF
+curl -X POST http://localhost:3000/api/analyze/pdf \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com", "format": "landscape"}' \
+  --output landscape-report.pdf
+
+# Custom filename
+curl -X POST http://localhost:3000/api/analyze/pdf \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com", "format": "with-filename", "filename": "client-report.pdf"}' \
+  --output client-report.pdf
 ```
 
 ## Sample Output

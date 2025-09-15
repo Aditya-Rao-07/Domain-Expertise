@@ -15,7 +15,10 @@
     "dev": "node server.js",
     "server": "node start-server.js",
     "test-fix": "node test-performance-fix.js",
-    "test-recommendations": "node test-fixes.js"
+    "test-recommendations": "node test-fixes.js",
+    "test-pdf": "node test-pdf-generation.js",
+    "test-pdf-api": "node test-pdf-generation.js --api-only",
+    "test-pdf-direct": "node test-pdf-generation.js --direct-only"
   },
   "keywords": [
     "wordpress",
@@ -32,7 +35,8 @@
     "axios": "^1.6.0",
     "cheerio": "^1.0.0-rc.12",
     "express": "^4.18.2",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "puppeteer": "^21.0.0"
   },
   "devDependencies": {},
   "engines": {
