@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **WordPress Plugin Integration**: Complete WordPress plugin (`wp-analyzer-form.php`) for seamless integration with WordPress sites
+- **Shortcode Functionality**: `[wp_analyzer_form]` shortcode for easy form embedding in pages and posts
+- **Admin Settings Page**: Configurable external server URL and default report format settings
+- **Professional Form Design**: Clean, minimal styling that blends with any WordPress theme
+- **AJAX Form Submission**: Smooth form handling with real-time validation and user feedback
+- **Security Features**: Nonce verification, input sanitization, and proper WordPress security practices
+- **Responsive Design**: Mobile-first design with dark mode and accessibility support
+- **Plugin Documentation**: Comprehensive README with installation, configuration, and usage instructions
 - **Test Organization**: Reorganized all test scripts into a dedicated `tests/` directory for better maintainability
 - **Test Structure**: Created organized test categories (pdf/, email/, api/) with comprehensive documentation
 - **Test Documentation**: Added detailed testing guide in `tests/README.md` with setup instructions and examples
