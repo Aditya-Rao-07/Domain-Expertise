@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Puppeteer Configuration**: Added `puppeteer.config.cjs` for proper cache directory configuration to resolve Chrome installation issues on Render deployment
 - **Automatic Chrome Installation**: Added `postinstall` script to automatically install Chrome browser for Puppeteer PDF generation
+
+### Fixed
+- **PDF Generation Timeout**: Increased Puppeteer navigation timeout from 30s to 60s to handle slower Render deployment environments
+- **Browser Launch Optimization**: Added additional Chrome flags for better performance on cloud platforms
 - **WordPress Plugin Integration**: Complete WordPress plugin (`wp-analyzer-form.php`) for seamless integration with WordPress sites
 - **Shortcode Functionality**: `[wp_analyzer_form]` shortcode for easy form embedding in pages and posts
 - **Admin Settings Page**: Configurable external server URL and default report format settings

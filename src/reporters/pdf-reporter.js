@@ -46,11 +46,18 @@ class PdfReporter {
                     '--disable-accelerated-2d-canvas',
                     '--no-first-run',
                     '--no-zygote',
-                    '--disable-gpu'
-                ]
+                    '--disable-gpu',
+                    '--disable-web-security',
+                    '--disable-features=VizDisplayCompositor'
+                ],
+                timeout: 60000
             });
 
             const page = await browser.newPage();
+            
+            // Set default timeout for page operations
+            page.setDefaultTimeout(60000);
+            page.setDefaultNavigationTimeout(60000);
             
             // Set viewport for consistent rendering
             await page.setViewport({
@@ -62,7 +69,7 @@ class PdfReporter {
             // Set content and wait for all resources to load
             await page.setContent(html, {
                 waitUntil: ['networkidle0', 'domcontentloaded'],
-                timeout: 30000
+                timeout: 60000
             });
 
             // Wait for fonts to load
@@ -180,8 +187,11 @@ class PdfReporter {
                     '--disable-accelerated-2d-canvas',
                     '--no-first-run',
                     '--no-zygote',
-                    '--disable-gpu'
-                ]
+                    '--disable-gpu',
+                    '--disable-web-security',
+                    '--disable-features=VizDisplayCompositor'
+                ],
+                timeout: 60000
             });
 
             const page = await browser.newPage();
@@ -196,7 +206,7 @@ class PdfReporter {
             // Set content
             await page.setContent(html, {
                 waitUntil: ['networkidle0', 'domcontentloaded'],
-                timeout: 30000
+                timeout: 60000
             });
 
             // Wait for fonts
