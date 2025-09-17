@@ -36,8 +36,8 @@ class PdfReporter {
             // Generate HTML content using existing HtmlReporter
             const html = HtmlReporter.generate(results, options);
             
-            // Launch Puppeteer browser
-            browser = await puppeteer.launch({
+            // Launch Puppeteer browser with explicit Chrome path if configured
+            const launchOptions = {
                 headless: true,
                 args: [
                     '--no-sandbox',
@@ -48,7 +48,15 @@ class PdfReporter {
                     '--no-zygote',
                     '--disable-gpu'
                 ]
-            });
+            };
+
+            // Use explicit Chrome path if configured in environment
+            if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+                launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+                console.log(`Using Chrome executable: ${process.env.PUPPETEER_EXECUTABLE_PATH}`);
+            }
+
+            browser = await puppeteer.launch(launchOptions);
 
             const page = await browser.newPage();
             
@@ -170,7 +178,8 @@ class PdfReporter {
                 printOptimized: true
             });
             
-            browser = await puppeteer.launch({
+            // Launch Puppeteer browser with explicit Chrome path if configured
+            const launchOptions = {
                 headless: true,
                 args: [
                     '--no-sandbox',
@@ -181,7 +190,15 @@ class PdfReporter {
                     '--no-zygote',
                     '--disable-gpu'
                 ]
-            });
+            };
+
+            // Use explicit Chrome path if configured in environment
+            if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+                launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+                console.log(`Using Chrome executable: ${process.env.PUPPETEER_EXECUTABLE_PATH}`);
+            }
+
+            browser = await puppeteer.launch(launchOptions);
 
             const page = await browser.newPage();
             
