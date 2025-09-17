@@ -8,9 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Puppeteer Chrome Path Configuration**: Added explicit Chrome executable path configuration via `PUPPETEER_EXECUTABLE_PATH` environment variable for Render deployment compatibility
+- **Puppeteer Configuration**: Added `puppeteer.config.cjs` for proper cache directory configuration to resolve Chrome installation issues on Render deployment
 - **Automatic Chrome Installation**: Added `postinstall` script to automatically install Chrome browser for Puppeteer PDF generation
-- **Environment-Specific Configuration**: Enhanced Puppeteer launch options to use explicit Chrome path when configured, with fallback to bundled Chrome for local development
 - **WordPress Plugin Integration**: Complete WordPress plugin (`wp-analyzer-form.php`) for seamless integration with WordPress sites
 - **Shortcode Functionality**: `[wp_analyzer_form]` shortcode for easy form embedding in pages and posts
 - **Admin Settings Page**: Configurable external server URL and default report format settings
