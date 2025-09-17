@@ -7,6 +7,7 @@
     "wp-analyze": "./cli.js"
   },
   "scripts": {
+    "postinstall": "npx puppeteer browsers install chrome",
     "start": "node cli.js",
     "analyze": "node cli.js",
     "analyze-html": "node cli.js --html",
