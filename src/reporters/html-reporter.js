@@ -173,9 +173,21 @@ class HtmlReporter {
                 background: var(--surface-color);
                 color: var(--text-primary);
                 padding: 3rem 2rem;
-                text-align: center;
                 margin-bottom: 0;
                 border-bottom: 2px solid var(--border-color);
+            }
+
+            .header-content {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                max-width: 1200px;
+                margin: 0 auto;
+            }
+
+            .header-text {
+                flex: 1;
+                text-align: left;
             }
 
             .header h1 {
@@ -197,6 +209,43 @@ class HtmlReporter {
                 font-weight: 600;
                 margin-top: 0.5rem;
                 color: var(--text-primary);
+            }
+
+            .header-logo {
+                flex-shrink: 0;
+                margin-left: 2rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .logo-image {
+                height: 80px;
+                width: auto;
+                opacity: 0.9;
+                transition: opacity 0.2s ease;
+            }
+
+            .logo-image:hover {
+                opacity: 1;
+            }
+
+            .logo-fallback {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 80px;
+                padding: 0 1.5rem;
+                background: linear-gradient(135deg, #6366f1, #8b5cf6);
+                border-radius: 10px;
+                box-shadow: 0 3px 12px rgba(99, 102, 241, 0.25);
+            }
+
+            .logo-text {
+                font-size: 1.75rem;
+                font-weight: 700;
+                color: white;
+                letter-spacing: -0.025em;
             }
 
             .summary-cards {
@@ -1390,9 +1439,86 @@ class HtmlReporter {
                     padding: 2rem 1rem;
                 }
 
+                .header-content {
+                    flex-direction: row;
+                    align-items: center;
+                    gap: 1rem;
+                }
+
+                .header-text {
+                    flex: 1;
+                    text-align: left;
+                }
+
                 .header h1 {
                     font-size: 2rem;
                 }
+
+                .header-logo {
+                    margin-left: 1rem;
+                    flex-shrink: 0;
+                }
+
+                .logo-image {
+                    height: 70px;
+                }
+
+                .logo-fallback {
+                    height: 70px;
+                    padding: 0 1.25rem;
+                }
+
+                .logo-text {
+                    font-size: 1.5rem;
+                }
+            }
+
+            @media (max-width: 480px) {
+                .header {
+                    padding: 1.5rem 1rem;
+                }
+
+                .header-content {
+                    flex-direction: row;
+                    align-items: center;
+                    gap: 0.75rem;
+                }
+
+                .header-text {
+                    flex: 1;
+                    text-align: left;
+                }
+
+                .header h1 {
+                    font-size: 1.75rem;
+                }
+
+                .header .subtitle {
+                    font-size: 1rem;
+                }
+
+                .header .domain {
+                    font-size: 1.125rem;
+                }
+
+                .header-logo {
+                    margin-left: 0.75rem;
+                    flex-shrink: 0;
+                }
+
+                .logo-image {
+                    height: 60px;
+                }
+
+                .logo-fallback {
+                    height: 60px;
+                    padding: 0 1rem;
+                }
+
+                .logo-text {
+                    font-size: 1.25rem;
+                }
+            }
 
                 .summary-cards {
                     grid-template-columns: 1fr;
@@ -1835,6 +1961,23 @@ class HtmlReporter {
     }
 
     /**
+     * Load WisdmLabs logo data
+     * @returns {string|null} Base64 encoded logo data or null if not found
+     */
+    static getLogoData() {
+        try {
+            const fs = require('fs');
+            const path = require('path');
+            const logoPath = path.join(__dirname, '..', '..', 'assets', 'wisdmlabs-logo.webp');
+            const logoBuffer = fs.readFileSync(logoPath);
+            return `data:image/webp;base64,${logoBuffer.toString('base64')}`;
+        } catch (error) {
+            console.warn('Could not load logo:', error.message);
+            return null;
+        }
+    }
+
+    /**
      * Generate header section
      * @param {Object} data - Processed report data
      * @returns {string} Header HTML
@@ -1848,11 +1991,25 @@ class HtmlReporter {
             minute: '2-digit'
         });
 
+        const logoData = this.getLogoData();
+
         return `
         <header class="header">
-            <h1>WordPress Analysis Report</h1>
-            <div class="subtitle">Comprehensive site analysis and recommendations</div>
-            <div class="domain">${data.domain}</div>
+            <div class="header-content">
+                <div class="header-text">
+                    <h1>WordPress Analysis Report</h1>
+                    <div class="subtitle">Comprehensive site analysis and recommendations</div>
+                    <div class="domain">${data.domain}</div>
+                </div>
+                <div class="header-logo">
+                    ${logoData ? 
+                        `<img src="${logoData}" alt="WisdmLabs" class="logo-image" />` :
+                        `<div class="logo-fallback">
+                            <span class="logo-text">WisdmLabs</span>
+                        </div>`
+                    }
+                </div>
+            </div>
         </header>`;
     }
 
@@ -3096,7 +3253,7 @@ class HtmlReporter {
         <section class="detected-issues-section">
             <h2 class="section-header">
                 <span class="section-icon error-icon">${this.getMaterialIcon('warning')}</span>
-                Detected Site Issues
+                Site Issues Detected by WisdmLabs Insights
             </h2>
             <div class="issues-grid">
                 ${issueCards}
@@ -3231,7 +3388,7 @@ class HtmlReporter {
         <section class="recommended-fixes-section">
             <h2 class="section-header">
                 <span class="section-icon success-icon">${this.getMaterialIcon('check_circle')}</span>
-                Recommended Fixes
+                Wisdm Recommends
             </h2>
             <div class="fixes-list">
                 ${fixCards}
@@ -3751,7 +3908,7 @@ class HtmlReporter {
         return `
         <footer class="footer">
             <p>Report generated by WordPress Site Analyzer v2.0.0</p>
-            <p>Analysis completed in ${data.duration}ms on ${data.timestamp.toLocaleString()}</p>
+            <p>For more information about your site analysis, feel free to contact us at aditya.rao@wisdmlabs.com.</p>
             <p>This report analyzes publicly available information and does not access private data.</p>
         </footer>`;
     }

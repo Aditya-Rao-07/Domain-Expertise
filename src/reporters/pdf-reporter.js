@@ -2,6 +2,8 @@
 
 const puppeteer = require('puppeteer');
 const HtmlReporter = require('./html-reporter');
+const fs = require('fs');
+const path = require('path');
 
 /**
  * PDF reporter for WordPress analysis results
@@ -133,15 +135,43 @@ class PdfReporter {
     }
 
     /**
+     * Get logo data as base64
+     * @returns {string} Base64 encoded logo
+     */
+    static getLogoData() {
+        try {
+            const logoPath = path.join(__dirname, '..', '..', 'assets', 'wisdmlabs-logo.webp');
+            const logoBuffer = fs.readFileSync(logoPath);
+            return `data:image/webp;base64,${logoBuffer.toString('base64')}`;
+        } catch (error) {
+            console.warn('Could not load logo:', error.message);
+            return null;
+        }
+    }
+
+    /**
      * Get footer template for PDF
      * @returns {string} Footer HTML template
      */
     static getFooterTemplate() {
+        const logoData = this.getLogoData();
+        
         return `
-            <div style="font-size: 10px; padding: 0 1cm; width: 100%; display: flex; justify-content: space-between; color: #666;">
-                <span>WordPress Site Analyzer v2.0.0</span>
-                <span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
-                <span class="date"></span>
+            <div style="width: 100%; margin: 0; padding: 0; box-sizing: border-box;">
+                <div style="padding: 8px 0; margin: 10px 0 0 0; width: 100%;">
+                    <div style="font-size: 12px; padding: 0 20px; width: 100%; display: flex; justify-content: space-between; align-items: center; color: #666; box-sizing: border-box;">
+                        <span style="flex: 1; text-align: left; font-size: 12px; font-weight: 500;">WordPress Site Analyzer v2.0.0</span>
+                        <span style="flex: 1; text-align: center; font-size: 12px; font-weight: 500;">Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
+                        <div style="flex: 1; display: flex; align-items: center; justify-content: flex-end;">
+                            ${logoData ? 
+                                `<img src="${logoData}" style="height: 48px; width: auto; opacity: 0.8;" alt="WisdmLabs" />` :
+                                `<div style="display: flex; align-items: center; font-size: 18px; font-weight: 700; color: #374151;">
+                                    <span style="color: #6366f1;">Wis</span><span style="color: #8b5cf6;">dm</span><span style="color: #374151;">Labs</span>
+                                </div>`
+                            }
+                        </div>
+                    </div>
+                </div>
             </div>
         `;
     }

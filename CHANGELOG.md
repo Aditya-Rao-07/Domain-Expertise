@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **PDF Generation Timeout**: Increased Puppeteer navigation timeout from 30s to 60s to handle slower Render deployment environments
 - **Browser Launch Optimization**: Added additional Chrome flags for better performance on cloud platforms
+
+### Enhanced
+- **PDF Footer Design**: Added professional WisdmLabs branding to PDF footer with actual WebP logo image and thin horizontal separator line
+- **Footer Layout**: Replaced date/time with branded "Powered by WisdmLabs" section in bottom right corner for better brand visibility
+- **Dynamic Logo Loading**: Implemented dynamic logo loading with fallback to text-based branding if image fails to load
 - **WordPress Plugin Integration**: Complete WordPress plugin (`wp-analyzer-form.php`) for seamless integration with WordPress sites
 - **Shortcode Functionality**: `[wp_analyzer_form]` shortcode for easy form embedding in pages and posts
 - **Admin Settings Page**: Configurable external server URL and default report format settings
