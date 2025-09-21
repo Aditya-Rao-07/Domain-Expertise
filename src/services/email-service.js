@@ -205,7 +205,8 @@ class EmailService {
         }
         @media (max-width: 640px) {
             .email-wrapper {
-                padding: 16px;
+                padding: 12px 8px;
+                max-width: 100%;
             }
         }
         @media (min-width: 1024px) {
@@ -217,6 +218,17 @@ class EmailService {
         .header {
             text-align: center;
             margin-bottom: 48px;
+        }
+        @media (max-width: 640px) {
+            .header {
+                margin-bottom: 32px;
+            }
+            .header h1 {
+                font-size: 18px !important;
+            }
+            .header .subtitle {
+                font-size: 14px !important;
+            }
         }
         .header-branding {
             display: flex;
@@ -309,6 +321,39 @@ class EmailService {
                 gap: 16px;
             }
         }
+        
+        /* Mobile-friendly table styles for Analysis Summary */
+        @media (max-width: 640px) {
+            .summary-section {
+                padding: 20px 16px;
+            }
+            .summary-header {
+                font-size: 20px;
+                margin-bottom: 20px;
+            }
+            .summary-section table {
+                width: 100% !important;
+            }
+            .summary-section table td {
+                width: 100% !important;
+                display: block !important;
+                padding: 0 0 16px 0 !important;
+            }
+            .summary-section table td:last-child {
+                padding-bottom: 0 !important;
+            }
+            .summary-section .summary-item {
+                padding: 16px !important;
+                margin-bottom: 0 !important;
+            }
+            .summary-section .summary-label {
+                font-size: 13px !important;
+                margin-bottom: 6px !important;
+            }
+            .summary-section .summary-value {
+                font-size: 28px !important;
+            }
+        }
         .summary-item {
             padding: 20px;
             background: #F9FAFB;
@@ -355,6 +400,23 @@ class EmailService {
             border-radius: 8px;
             border: 1px solid #E5E7EB;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        @media (max-width: 640px) {
+            .contact-section {
+                padding: 24px 16px;
+            }
+            .contact-section h2 {
+                font-size: 20px !important;
+                margin-bottom: 12px !important;
+            }
+            .contact-section p {
+                font-size: 14px !important;
+                margin-bottom: 24px !important;
+            }
+            .cta-button {
+                padding: 12px 24px !important;
+                font-size: 14px !important;
+            }
         }
         .contact-section h2 {
             font-size: 24px;
