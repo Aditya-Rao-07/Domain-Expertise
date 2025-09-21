@@ -50,9 +50,10 @@ class PluginDetector {
         console.log('Phase 5: Merging detection results...');
         const mergedData = this.mergePluginData(htmlData, inlineData, networkData, assetData);
         
-        // Phase 6: Enhance with file-based detection
-        console.log('Phase 6: Fetching additional version info...');
-        const enhancedData = await this.enhanceWithFileDetection(baseUrl, mergedData);
+        // Phase 6: Enhance with file-based detection (TEMPORARILY DISABLED)
+        console.log('Phase 6: Fetching additional version info... (DISABLED)');
+        // const enhancedData = await this.enhanceWithFileDetection(baseUrl, mergedData);
+        const enhancedData = mergedData; // Skip file-based detection
         
         // Phase 7: Convert to final format and filter
         console.log('Phase 7: Finalizing results...');

@@ -77,9 +77,18 @@ class PluginRecommendationEngine {
             console.log('⚡ Step 2: Performance analysis...');
             recommendations.analysis.performance_analysis = await this.performanceEngine.analyzePerformanceAndRecommend(performanceData, siteData);
             
-            // Step 3: Functionality Gap Analysis
-            console.log('🔍 Step 3: Functionality gap analysis...');
-            recommendations.analysis.functionality_analysis = await this.functionalityAnalyzer.analyzeFunctionality(baseUrl, $, html, siteData.plugins || []);
+            // Step 3: Functionality Gap Analysis (TEMPORARILY DISABLED)
+            console.log('🔍 Step 3: Functionality gap analysis... (DISABLED)');
+            // recommendations.analysis.functionality_analysis = await this.functionalityAnalyzer.analyzeFunctionality(baseUrl, $, html, siteData.plugins || []);
+            
+            // Provide empty functionality analysis to maintain structure
+            recommendations.analysis.functionality_analysis = {
+                detected: {},
+                missing: {},
+                recommendations: [],
+                score: 100,
+                summary: 'Functionality analysis temporarily disabled'
+            };
             
             // Step 4: Generate PSI-based recommendations
             console.log('🎯 Step 4: Generating PSI-based recommendations...');

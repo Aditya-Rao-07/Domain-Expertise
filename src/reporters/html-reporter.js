@@ -1434,6 +1434,71 @@ class HtmlReporter {
                 margin-top: 2rem;
             }
 
+            /* Tablet responsive styles for Plugin Performance Report table */
+            @media (max-width: 1024px) and (min-width: 700px) {
+                /* Plugin Performance Report table tablet optimization */
+                .plugin-performance-table {
+                    table-layout: fixed;
+                    width: 100%;
+                }
+
+                .plugin-performance-table th,
+                .plugin-performance-table td {
+                    padding: 0.75rem 0.5rem;
+                }
+
+                .plugin-performance-table th:first-child,
+                .plugin-performance-table td:first-child {
+                    width: 35%; /* Plugin name column - reduced space allocation */
+                }
+
+                .plugin-performance-table th:nth-child(2),
+                .plugin-performance-table td:nth-child(2) {
+                    width: 20%; /* Version column */
+                }
+
+                .plugin-performance-table th:nth-child(3),
+                .plugin-performance-table td:nth-child(3) {
+                    width: 20%; /* Total Size column */
+                }
+
+                .plugin-performance-table th:nth-child(4),
+                .plugin-performance-table td:nth-child(4) {
+                    width: 15%; /* Impact column */
+                }
+
+                /* Plugin name cell styling - enable text wrapping */
+                .plugin-performance-table .plugin-name-cell {
+                    word-wrap: break-word;
+                    overflow-wrap: break-word;
+                    hyphens: auto;
+                    white-space: normal;
+                    line-height: 1.4;
+                }
+
+                /* Version cell styling - center align for better space usage */
+                .plugin-performance-table .version-cell {
+                    text-align: center;
+                }
+
+                /* Size cell styling - center align */
+                .plugin-performance-table .size-cell {
+                    text-align: center;
+                }
+
+                /* Impact cell styling - center align */
+                .plugin-performance-table .impact-cell {
+                    text-align: center;
+                }
+
+                /* Header alignment - center align Version, Total Size, and Impact headers */
+                .plugin-performance-table th:nth-child(2),
+                .plugin-performance-table th:nth-child(3),
+                .plugin-performance-table th:nth-child(4) {
+                    text-align: center;
+                }
+            }
+
             @media (max-width: 768px) {
                 .header {
                     padding: 2rem 1rem;
@@ -2429,21 +2494,26 @@ class HtmlReporter {
 
             // Generate recommendations based on plugin data and performance
             const recommendations = this.generatePluginRecommendations(plugin);
+            
+            // Validate and format version
+            const displayVersion = plugin.version && this.isValidVersion(plugin.version) 
+                ? plugin.version 
+                : 'Unknown';
 
             return `
                 <tr>
-                    <td class="px-6 py-4 whitespace-nowrap">
+                    <td class="px-6 py-4 whitespace-nowrap plugin-name-cell">
                         <div class="text-sm font-semibold text-gray-900">${plugin.displayName || plugin.name}</div>
-                        <div class="text-sm text-gray-500">${plugin.name}</div>
+                        ${plugin.displayName && plugin.displayName !== plugin.name ? `<div class="text-sm text-gray-500">${plugin.name}</div>` : ''}
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-700 font-semibold">${plugin.version || 'Unknown'}</div>
+                    <td class="px-6 py-4 whitespace-nowrap version-cell">
+                        <div class="text-sm text-gray-700 font-semibold">${displayVersion}</div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
+                    <td class="px-6 py-4 whitespace-nowrap size-cell">
                         <div class="text-sm font-semibold text-${impactClass}-600">${totalSizeKB}KB</div>
                         <div class="text-xs text-gray-500">CSS: ${cssKB}KB | JS: ${jsKB}KB</div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
+                    <td class="px-6 py-4 whitespace-nowrap impact-cell">
                         <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-${impactClass}-100 text-${impactClass}-800">${impactLevel}</span>
                     </td>
                 </tr>
@@ -2464,7 +2534,7 @@ class HtmlReporter {
             <div class="section-content">
                 <div class="bg-white rounded-lg shadow-md overflow-hidden">
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left">
+                        <table class="w-full text-left plugin-performance-table">
                             <thead class="bg-gray-50">
                                 <tr>
                                     <th class="px-6 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Plugin</th>
@@ -2481,6 +2551,57 @@ class HtmlReporter {
                 </div>
             </div>
         </section>`;
+    }
+
+    /**
+     * Validate if a version string looks like a valid plugin version
+     * @param {string} version - Version string to validate
+     * @returns {boolean} True if version looks valid, false otherwise
+     */
+    static isValidVersion(version) {
+        if (!version || typeof version !== 'string') return false;
+        
+        const versionStr = version.trim();
+        
+        // Check if version is too long (likely a hash or timestamp)
+        if (versionStr.length > 20) return false;
+        
+        // Check for common invalid patterns
+        const invalidPatterns = [
+            /^\d{10,}$/,           // Pure timestamps like 1678293949
+            /^\d{8}$/,             // Date formats like 20250329
+            /^\d{8}-\d{5}$/,       // Date-time formats like 20250904-85040
+            /^[a-f0-9]{20,}$/i,    // Long hex strings like dbea705cfafe089d65f1
+            /^[a-f0-9]{32,}$/i,    // MD5-like hashes like 37f68a8beb4edffe75197731eda158fd
+            /^[a-f0-9]{40,}$/i,    // SHA1-like hashes
+            /^\d+$/,               // Pure numbers (unless they're short and look like versions)
+        ];
+        
+        // Check against invalid patterns
+        for (const pattern of invalidPatterns) {
+            if (pattern.test(versionStr)) {
+                // Exception: allow short numbers that look like version numbers (e.g., "1", "2", "3")
+                if (/^\d+$/.test(versionStr) && versionStr.length <= 2) {
+                    continue;
+                }
+                return false;
+            }
+        }
+        
+        // Check for valid version patterns
+        const validPatterns = [
+            /^\d+\.\d+$/,                    // 1.0, 2.5, etc.
+            /^\d+\.\d+\.\d+$/,              // 1.0.0, 2.5.3, etc.
+            /^\d+\.\d+\.\d+\.\d+$/,         // 1.0.0.1, etc.
+            /^\d+\.\d+\.\d+[a-zA-Z]?$/,     // 1.0.0a, 2.5.3b, etc.
+            /^\d+\.\d+[a-zA-Z]?$/,          // 1.0a, 2.5b, etc.
+            /^\d+$/,                        // Single digit versions (1, 2, 3)
+            /^v\d+\.\d+/,                   // v1.0, v2.5, etc.
+            /^[a-zA-Z]+\d+\.\d+/,           // beta1.0, alpha2.5, etc.
+        ];
+        
+        // Check if version matches any valid pattern
+        return validPatterns.some(pattern => pattern.test(versionStr));
     }
 
     /**
@@ -3253,7 +3374,7 @@ class HtmlReporter {
         <section class="detected-issues-section">
             <h2 class="section-header">
                 <span class="section-icon error-icon">${this.getMaterialIcon('warning')}</span>
-                Site Issues Detected by WisdmLabs Insights
+                Site Issues Detected by WisdmLabs
             </h2>
             <div class="issues-grid">
                 ${issueCards}
@@ -3388,7 +3509,7 @@ class HtmlReporter {
         <section class="recommended-fixes-section">
             <h2 class="section-header">
                 <span class="section-icon success-icon">${this.getMaterialIcon('check_circle')}</span>
-                Wisdm Recommends
+                WisdmLabs Recommends
             </h2>
             <div class="fixes-list">
                 ${fixCards}
