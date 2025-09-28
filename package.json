@@ -20,12 +20,15 @@
     "test-pdf": "node tests/pdf/test-pdf-generation.js",
     "test-pdf-api": "node tests/pdf/test-pdf-generation.js --api-only",
     "test-pdf-direct": "node tests/pdf/test-pdf-generation.js --direct-only",
+    "test-pdf-serverless": "NODE_ENV=production node tests/pdf/test-pdf-generation.js --direct-only",
     "test-email": "node tests/email/test-email-functionality.js",
     "test-email-service": "node tests/email/test-email-functionality.js --service-only",
     "test-email-api": "node tests/email/test-email-functionality.js --api-only",
     "test-email-workflow": "node tests/email/test-email-functionality.js --workflow-only",
     "email-setup": "node tests/email/test-email-functionality.js --setup",
-    "test-api": "node tests/api/test-api-endpoints.js"
+    "test-api": "node tests/api/test-api-endpoints.js",
+    "vercel-build": "echo 'Build completed'",
+    "vercel-dev": "node server.js"
   },
   "keywords": [
     "wordpress",
@@ -44,6 +47,8 @@
     "express": "^5.1.0",
     "cors": "^2.8.5",
     "puppeteer": "^24.21.0",
+    "puppeteer-core": "^24.21.0",
+    "@sparticuz/chromium-min": "^131.0.0",
     "nodemailer": "^7.0.6",
     "dotenv": "^17.2.2"
   },

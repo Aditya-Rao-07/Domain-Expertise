@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Serverless Deployment Support**: Added environment-aware PDF generation for Vercel and other serverless platforms
+- **Puppeteer Core Integration**: Added `puppeteer-core` and `@sparticuz/chromium-min` dependencies for serverless optimization
+- **Environment Detection**: Implemented automatic environment detection for local vs serverless deployment
+- **Self-Hosted Chromium**: Added support for GitHub CDN-hosted Chromium to avoid Vercel bundle size limits
+- **Vercel Configuration**: Added `vercel.json` with optimized function settings and routing
+- **Serverless Testing**: Added `test-pdf-serverless` script for testing PDF generation in production environment
+- **Performance Optimizations**: Added serverless-specific optimizations including reduced timeouts and memory usage
+- **Deployment Documentation**: Added comprehensive `SERVERLESS_DEPLOYMENT_GUIDE.md` with setup and troubleshooting instructions
 - **Puppeteer Configuration**: Added `puppeteer.config.cjs` for proper cache directory configuration to resolve Chrome installation issues on Render deployment
 - **Automatic Chrome Installation**: Added `postinstall` script to automatically install Chrome browser for Puppeteer PDF generation
 - **Email Logo Integration**: Added WisdmLabs logo to email templates in both header and footer sections with proper scaling and professional styling
@@ -32,6 +40,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **PDF Generation Timeout**: Increased Puppeteer navigation timeout from 30s to 60s to handle slower Render deployment environments
 - **Browser Launch Optimization**: Added additional Chrome flags for better performance on cloud platforms
+- **Vercel Bundle Size**: Fixed PDF generation on Vercel by implementing environment-aware browser configuration
+- **Serverless Memory Issues**: Optimized PDF generation for serverless environments with reduced memory footprint
+- **Chromium Download Failures**: Added fallback to self-hosted Chromium from GitHub CDN for reliable deployment
 
 ### Enhanced
 - **PDF Footer Design**: Added professional WisdmLabs branding to PDF footer with actual WebP logo image and thin horizontal separator line

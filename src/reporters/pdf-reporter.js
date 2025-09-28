@@ -1,7 +1,7 @@
 // File: ./src/reporters/pdf-reporter.js
 
-const puppeteer = require('puppeteer');
 const HtmlReporter = require('./html-reporter');
+const PuppeteerConfig = require('../utils/puppeteer-config');
 const fs = require('fs');
 const path = require('path');
 
@@ -17,6 +17,10 @@ class PdfReporter {
      * @returns {Buffer} PDF buffer
      */
     static async generate(results, options = {}) {
+        // Get environment-aware configuration
+        const puppeteerConfig = await PuppeteerConfig.getPuppeteerConfig();
+        const pageConfig = PuppeteerConfig.getPageConfig();
+        
         const defaultOptions = {
             format: 'A4',
             printBackground: true,
@@ -29,8 +33,7 @@ class PdfReporter {
             displayHeaderFooter: true,
             headerTemplate: this.getHeaderTemplate(),
             footerTemplate: this.getFooterTemplate(),
-            preferCSSPageSize: false,
-            ...options
+            ...PuppeteerConfig.getOptimizedPdfOptions(options)
         };
 
         let browser;
@@ -38,52 +41,39 @@ class PdfReporter {
             // Generate HTML content using existing HtmlReporter
             const html = HtmlReporter.generate(results, options);
             
-            // Launch Puppeteer browser
-            browser = await puppeteer.launch({
-                headless: true,
-                args: [
-                    '--no-sandbox',
-                    '--disable-setuid-sandbox',
-                    '--disable-dev-shm-usage',
-                    '--disable-accelerated-2d-canvas',
-                    '--no-first-run',
-                    '--no-zygote',
-                    '--disable-gpu',
-                    '--disable-web-security',
-                    '--disable-features=VizDisplayCompositor'
-                ],
-                timeout: 120000
-            });
+            console.log(`🔧 Launching browser in ${puppeteerConfig.environment} environment...`);
+            
+            // Launch Puppeteer browser with environment-aware configuration
+            browser = await puppeteerConfig.puppeteer.launch(puppeteerConfig.launchOptions);
 
             const page = await browser.newPage();
             
-            // Set default timeout for page operations
-            page.setDefaultTimeout(120000);
-            page.setDefaultNavigationTimeout(120000);
+            // Set environment-optimized timeouts
+            page.setDefaultTimeout(pageConfig.timeout);
+            page.setDefaultNavigationTimeout(pageConfig.navigationTimeout);
             
             // Set viewport for consistent rendering
-            await page.setViewport({
-                width: 1200,
-                height: 800,
-                deviceScaleFactor: 1
-            });
+            await page.setViewport(pageConfig.viewport);
 
             // Set content and wait for all resources to load
             await page.setContent(html, {
                 waitUntil: ['networkidle0', 'domcontentloaded'],
-                timeout: 120000
+                timeout: pageConfig.timeout
             });
 
             // Wait for fonts to load
             await page.evaluateHandle('document.fonts.ready');
 
-            // Generate PDF
+            // Generate PDF with environment-optimized options
             const pdfBuffer = await page.pdf(defaultOptions);
+            
+            console.log(`✅ PDF generated successfully (${pdfBuffer.length} bytes) in ${puppeteerConfig.environment} environment`);
             
             return pdfBuffer;
 
         } catch (error) {
             console.error('PDF generation failed:', error);
+            console.error('Environment info:', PuppeteerConfig.getEnvironmentInfo());
             throw new Error(`PDF generation failed: ${error.message}`);
         } finally {
             if (browser) {
@@ -183,6 +173,10 @@ class PdfReporter {
      * @returns {Buffer} PDF buffer
      */
     static async generatePrintOptimized(results, options = {}) {
+        // Get environment-aware configuration
+        const puppeteerConfig = await PuppeteerConfig.getPuppeteerConfig();
+        const pageConfig = PuppeteerConfig.getPageConfig();
+        
         const printOptions = {
             format: 'A4',
             printBackground: true,
@@ -195,8 +189,7 @@ class PdfReporter {
             displayHeaderFooter: true,
             headerTemplate: this.getHeaderTemplate(),
             footerTemplate: this.getFooterTemplate(),
-            preferCSSPageSize: false,
-            ...options
+            ...PuppeteerConfig.getOptimizedPdfOptions(options)
         };
 
         let browser;
@@ -207,36 +200,24 @@ class PdfReporter {
                 printOptimized: true
             });
             
-            // Launch Puppeteer browser
-            browser = await puppeteer.launch({
-                headless: true,
-                args: [
-                    '--no-sandbox',
-                    '--disable-setuid-sandbox',
-                    '--disable-dev-shm-usage',
-                    '--disable-accelerated-2d-canvas',
-                    '--no-first-run',
-                    '--no-zygote',
-                    '--disable-gpu',
-                    '--disable-web-security',
-                    '--disable-features=VizDisplayCompositor'
-                ],
-                timeout: 120000
-            });
+            console.log(`🔧 Launching browser for print-optimized PDF in ${puppeteerConfig.environment} environment...`);
+            
+            // Launch Puppeteer browser with environment-aware configuration
+            browser = await puppeteerConfig.puppeteer.launch(puppeteerConfig.launchOptions);
 
             const page = await browser.newPage();
             
+            // Set environment-optimized timeouts
+            page.setDefaultTimeout(pageConfig.timeout);
+            page.setDefaultNavigationTimeout(pageConfig.navigationTimeout);
+            
             // Set viewport
-            await page.setViewport({
-                width: 1200,
-                height: 800,
-                deviceScaleFactor: 1
-            });
+            await page.setViewport(pageConfig.viewport);
 
             // Set content
             await page.setContent(html, {
                 waitUntil: ['networkidle0', 'domcontentloaded'],
-                timeout: 120000
+                timeout: pageConfig.timeout
             });
 
             // Wait for fonts
@@ -250,10 +231,13 @@ class PdfReporter {
             // Generate PDF
             const pdfBuffer = await page.pdf(printOptions);
             
+            console.log(`✅ Print-optimized PDF generated successfully (${pdfBuffer.length} bytes) in ${puppeteerConfig.environment} environment`);
+            
             return pdfBuffer;
 
         } catch (error) {
             console.error('Print-optimized PDF generation failed:', error);
+            console.error('Environment info:', PuppeteerConfig.getEnvironmentInfo());
             throw new Error(`Print-optimized PDF generation failed: ${error.message}`);
         } finally {
             if (browser) {
