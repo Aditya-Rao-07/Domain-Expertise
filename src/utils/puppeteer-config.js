@@ -32,8 +32,8 @@ class PuppeteerConfig {
             const puppeteer = require('puppeteer-core');
             const chromium = require('@sparticuz/chromium-min');
 
-            // Get Chromium version from @sparticuz/chromium-min
-            const chromiumVersion = await chromium.executablePath('https://github.com/Sparticuz/chromium/releases/download/v131.0.0/chromium-v131.0.0-pack.tar');
+            // Get Chromium executable path from @sparticuz/chromium-min
+            const executablePath = await chromium.executablePath('https://github.com/Sparticuz/chromium/releases/download/v141.0.0/chromium-v141.0.0-pack.x64.tar');
 
             return {
                 puppeteer,
@@ -57,7 +57,7 @@ class PuppeteerConfig {
                         '--disable-renderer-backgrounding'
                     ],
                     defaultViewport: chromium.defaultViewport,
-                    executablePath: chromiumVersion,
+                    executablePath: executablePath,
                     headless: chromium.headless,
                     ignoreHTTPSErrors: true,
                     timeout: 30000, // Reduced timeout for serverless
