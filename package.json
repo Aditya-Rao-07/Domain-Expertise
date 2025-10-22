@@ -48,13 +48,13 @@
     "cors": "^2.8.5",
     "puppeteer": "^24.21.0",
     "puppeteer-core": "^24.21.0",
-    "@sparticuz/chromium-min": "^131.0.0",
+    "@sparticuz/chromium-min": "131.0.0",
     "nodemailer": "^7.0.6",
     "dotenv": "^17.2.2"
   },
   "devDependencies": {},
   "engines": {
-    "node": ">=14.0.0"
+    "node": "18.x"
   },
   "repository": {
     "type": "git",
