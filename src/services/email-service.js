@@ -150,6 +150,242 @@ class EmailService {
     }
 
     /**
+     * Send notification email to admin about new report request
+     * @param {string} userEmail - Email of the user who requested the report
+     * @param {string} siteUrl - Analyzed website URL
+     * @param {Buffer} pdfBuffer - PDF report that was sent to the user
+     * @returns {Promise<Object>} Notification email result
+     */
+    async sendNotificationEmail(userEmail, siteUrl, pdfBuffer) {
+        if (!this.transporter) {
+            throw new Error('Email service not configured');
+        }
+
+        const notificationEmail = process.env.NOTIFICATION_EMAIL;
+        if (!notificationEmail) {
+            console.log('📧 Notification email not configured, skipping notification');
+            return { success: true, skipped: true, reason: 'No notification email configured' };
+        }
+
+        // Generate notification content
+        const notificationContent = this.generateNotificationContent(userEmail, siteUrl);
+
+        // Generate filename for PDF attachment
+        const timestamp = new Date().toISOString().split('T')[0];
+        const domain = new URL(siteUrl).hostname.replace(/^www\./, '');
+        const filename = `wordpress-analysis-${domain}-${timestamp}.pdf`;
+
+        const mailOptions = {
+            from: {
+                name: 'WordPress Site Analyzer',
+                address: process.env.SMTP_FROM || process.env.SMTP_USER
+            },
+            to: notificationEmail,
+            subject: notificationContent.subject,
+            html: notificationContent.html,
+            text: notificationContent.text,
+            attachments: [
+                {
+                    filename: filename,
+                    content: pdfBuffer,
+                    contentType: 'application/pdf'
+                }
+            ]
+        };
+
+        try {
+            const result = await Promise.race([
+                this.transporter.sendMail(mailOptions),
+                new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Notification email timeout after 2 minutes')), 120000)
+                )
+            ]);
+            
+            console.log(`✅ Notification sent to ${notificationEmail} for report request from ${userEmail}`);
+            return {
+                success: true,
+                messageId: result.messageId,
+                recipient: notificationEmail,
+                userEmail: userEmail,
+                siteUrl: siteUrl
+            };
+        } catch (error) {
+            console.error('❌ Failed to send notification email:', error.message);
+            // Don't throw error - notification failure shouldn't affect user experience
+            return {
+                success: false,
+                error: error.message,
+                recipient: notificationEmail,
+                userEmail: userEmail,
+                siteUrl: siteUrl
+            };
+        }
+    }
+
+    /**
+     * Generate notification email content
+     * @param {string} userEmail - Email of the user who requested the report
+     * @param {string} siteUrl - Analyzed website URL
+     * @returns {Object} Notification email content (subject, html, text)
+     */
+    generateNotificationContent(userEmail, siteUrl) {
+        const timestamp = new Date().toLocaleString();
+        const domain = new URL(siteUrl).hostname.replace(/^www\./, '');
+
+        const subject = `New Analysis Report Request - ${domain}`;
+
+        const html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <title>WordPress Analysis Report Notification</title>
+                <style>
+                    body { 
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+                        line-height: 1.6; 
+                        color: #333; 
+                        margin: 0; 
+                        padding: 0; 
+                        background-color: #f8f9fa;
+                    }
+                    .container { 
+                        max-width: 600px; 
+                        margin: 0 auto; 
+                        background: white;
+                        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                    }
+                    .header { 
+                        background: #2c3e50; 
+                        color: white; 
+                        padding: 30px 20px; 
+                        text-align: center; 
+                    }
+                    .header h1 { 
+                        margin: 0; 
+                        font-size: 24px; 
+                        font-weight: 600;
+                    }
+                    .header p { 
+                        margin: 8px 0 0 0; 
+                        opacity: 0.9; 
+                        font-size: 14px;
+                    }
+                    .content { 
+                        padding: 30px 20px; 
+                    }
+                    .request-details { 
+                        background: #f8f9fa; 
+                        padding: 20px; 
+                        border-radius: 8px; 
+                        border-left: 4px solid #007cba;
+                    }
+                    .request-details h3 { 
+                        margin: 0 0 15px 0; 
+                        color: #2c3e50; 
+                        font-size: 18px;
+                    }
+                    .detail-row { 
+                        margin: 12px 0; 
+                        display: flex; 
+                        align-items: center;
+                    }
+                    .detail-label { 
+                        font-weight: 600; 
+                        color: #555; 
+                        min-width: 100px; 
+                        margin-right: 10px;
+                    }
+                    .detail-value { 
+                        color: #333;
+                    }
+                    .detail-value a { 
+                        color: #007cba; 
+                        text-decoration: none;
+                    }
+                    .attachment-info { 
+                        background: #e8f4fd; 
+                        padding: 15px; 
+                        border-radius: 6px; 
+                        margin-top: 20px; 
+                        border-left: 4px solid #007cba;
+                    }
+                    .attachment-info p { 
+                        margin: 0; 
+                        color: #2c3e50; 
+                        font-size: 14px;
+                    }
+                    .footer { 
+                        text-align: center; 
+                        padding: 20px; 
+                        color: #666; 
+                        font-size: 12px; 
+                        background: #f8f9fa;
+                        border-top: 1px solid #e9ecef;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>New Analysis Report Request</h1>
+                        <p>WordPress Site Analyzer</p>
+                    </div>
+                    
+                    <div class="content">
+                        <div class="request-details">
+                            <h3>Request Details</h3>
+                            
+                            <div class="detail-row">
+                                <span class="detail-label">User Email:</span>
+                                <span class="detail-value">${userEmail}</span>
+                            </div>
+                            
+                            <div class="detail-row">
+                                <span class="detail-label">Website:</span>
+                                <span class="detail-value"><a href="${siteUrl}" target="_blank">${siteUrl}</a></span>
+                            </div>
+                            
+                            <div class="detail-row">
+                                <span class="detail-label">Request Time:</span>
+                                <span class="detail-value">${timestamp}</span>
+                            </div>
+                        </div>
+
+                        <div class="attachment-info">
+                            <p><strong>📎 Attachment:</strong> The complete analysis report has been attached to this email.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="footer">
+                        <p>This notification was sent by WordPress Site Analyzer</p>
+                        <p>Generated on ${timestamp}</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+
+        const text = `
+New WordPress Analysis Report Request
+
+Request Details:
+- User Email: ${userEmail}
+- Website URL: ${siteUrl}
+- Request Time: ${timestamp}
+
+Attachment:
+The complete analysis report has been attached to this email.
+
+---
+This notification was sent by WordPress Site Analyzer
+Generated on ${timestamp}
+        `;
+
+        return { subject, html, text };
+    }
+
+    /**
      * Generate email content based on analysis data
      * @param {string} siteUrl - Analyzed website URL
      * @param {Object} analysisData - Analysis results

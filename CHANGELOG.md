@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Admin Notification System**: Added automatic email notifications to admin when users request analysis reports
+- **Notification Email Configuration**: Added `NOTIFICATION_EMAIL` environment variable for configurable admin notifications
+- **Minimal Notification Design**: Clean, professional notification emails with only request details and PDF report attachment
+- **PDF Report Attachment**: Notification emails include the complete analysis report PDF that was sent to the user
+- **Non-Critical Notification Handling**: Notification failures don't affect user report delivery, ensuring reliable user experience
 - **Serverless Deployment Support**: Added environment-aware PDF generation for Vercel and other serverless platforms
 - **Puppeteer Core Integration**: Added `puppeteer-core` and `@sparticuz/chromium-min` dependencies for serverless optimization
 - **Environment Detection**: Implemented automatic environment detection for local vs serverless deployment

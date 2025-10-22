@@ -228,6 +228,22 @@ app.post('/api/analyze/email', async (req, res) => {
             
             console.log(`✅ Email sent successfully to ${email}`);
             
+            // Send notification email to admin (if configured)
+            try {
+                const notificationResult = await emailService.sendNotificationEmail(email, url, pdfBuffer);
+                if (notificationResult.success) {
+                    if (notificationResult.skipped) {
+                        console.log(`📧 Notification skipped: ${notificationResult.reason}`);
+                    } else {
+                        console.log(`✅ Notification sent to admin for report request from ${email}`);
+                    }
+                } else {
+                    console.warn(`⚠️ Notification failed: ${notificationResult.error}`);
+                }
+            } catch (notificationError) {
+                console.warn(`⚠️ Notification error (non-critical): ${notificationError.message}`);
+            }
+            
             res.json({
                 success: true,
                 message: 'Analysis report sent successfully',
